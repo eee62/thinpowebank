@@ -305,7 +305,7 @@ cell_g  = corner_need(Ri, cell_m0, cell_corner_r);      // growth so the cell cl
 cell_pocket_w = cell_w + cell_margin_w + tol_small + 2*cell_g;
 cell_pocket_l = cell_l + cell_margin_l + tol_small + cell_g;
 
-y_bq0 = y0 + clr_board;
+y_bq0 = y0 + clr_board + (charge_port == "front" ? corner_keep : 0);   // standing board has a square corner in plan
 y_mx0 = y0 + clr_board;
 Yx0   = y_mx0 + mx_l + laneB_w;
 y_sp0 = y_bq0 + bq_l + 0.6;                             // small-parts column (switch, button, camera)
@@ -319,7 +319,7 @@ y_hi = y0 + Wi;        // inner face of the +Y wall
 // =============================================================================
 //  DERIVED: X (length)
 // =============================================================================
-x_row1 = charge_port == "edge" ? usb_boss_t + clr_board : wall + clr_board;
+x_row1 = charge_port == "edge" ? usb_boss_t + clr_board : wall + 1.0 + clr_board;   // front: outer guide plate between wall and board
 bq_edge_th = bq_pcb_t + bq_top_h + clr_board;           // bq standing on edge (front mode)
 sp_margin = max(0.5, corner_keep);
 sp_x0 = wall + sp_margin;
@@ -501,7 +501,7 @@ module bq_edge_guides() {
     slot = bq_pcb_t + 0.15 + 2*fit_slide_bought;   // PCB 1.57 ±0.15 assumed
     for (yy = [y_bq0 - 0.8, y_bq0 + bq_l - 1.2])
         difference() {
-            bx([x_row1 - 1.0, yy, Zbq_edge0 + 3], [x_row1 + slot + 1.0, yy + 2.0, Zw - (usb_boss_t - wall) + eps]);
+            bx([x_row1 - 1.0, yy, Zbq_edge0 + 3], [x_row1 + slot + 1.0, yy + 2.0, Zw + eps]);   // hangs from the front wall
             bx([x_row1 - eps, yy - 1, Zbq_edge0], [x_row1 + slot, yy + 3, Zw]);
         }
 }
@@ -525,8 +525,10 @@ module board_posts(kind, shoulder_d, z_top, z_bot) {
 module xiao_posts() {
     zb = Zx + 0.3;
     // USB end: posts beside the shell, touching neither the castellations nor the BOOT/RESET buttons
-    for (vv = [[4.412 - fit_slide_bought - 1.6, 4.412 - fit_slide_bought],
-               [13.352 + fit_slide_bought, 13.352 + fit_slide_bought + 1.6]])
+    v_lo = sd_card_fitted ? 2.484 : 4.412;     // card (if fitted) is wider than the USB shell
+    v_hi = sd_card_fitted ? 13.664 : 13.352;
+    for (vv = [[v_lo - fit_slide_bought - 1.6, v_lo - fit_slide_bought],
+               [v_hi + fit_slide_bought, v_hi + fit_slide_bought + 1.6]])
         bx([Xx0 - 0.1 - xpost, Yx0 + vv[0], zb], [Xx0 - 0.1, Yx0 + vv[1], Zw + eps]);
     // far end: past the expansion board envelope
     for (vv = [[2.0, 3.6], [14.18, 15.78]])
@@ -571,9 +573,10 @@ module ledges() {
     for (y = [y0 + 8, y0 + Wi/2, y_hi - 8])
         bx([L - wall - ledge_d, y - ledge_len/2, Zi0], [L - wall + eps, y + ledge_len/2, Zi0 + ledge_h]);
     // electronics end: beside the bq along the -Y wall, and in the bay
-    for (x = [x_row1 + 6, x_row1 + 19, x_bay + bay_len/2])
+    for (x = [x_row1 + 6, x_row1 + 19])
         bx([x - ledge_len/2, y0 - eps, Zi0], [x + ledge_len/2, y0 + ledge_d, Zi0 + ledge_h]);
-    bx([x_bay + bay_len/2 - ledge_len/2, y_hi - ledge_d, Zi0], [x_bay + bay_len/2 + ledge_len/2, y_hi + eps, Zi0 + ledge_h]);
+    if (bay_len >= ledge_len + 2) for (yy = [y0 - eps, y_hi - ledge_d])
+        bx([x_bay + bay_len/2 - ledge_len/2, yy, Zi0], [x_bay + bay_len/2 + ledge_len/2, yy + ledge_d + eps, Zi0 + ledge_h]);
 }
 
 module antenna_frame_front() {   // over_cell: low outline on the inside of the front wall
@@ -639,12 +642,12 @@ module body_cuts() {
 //  BOTTOM PLUG (flush back panel; permanent = epoxy, removable = crush ribs)
 // =============================================================================
 module plug_2d() translate([wall + plug_fx, wall + plug_fy]) rrect([Li - 2*plug_fx, Wi - 2*plug_fy], max(0, Ri - min(plug_fx, plug_fy)));
-module plug() {
+module plug(ribs = true) {
     difference() {
         union() {
             linear_extrude(plug_t) plug_2d();
             plug_features();
-            if (plug_mode == "removable") plug_ribs();
+            if (plug_mode == "removable" && ribs) plug_ribs();
         }
         if (plug_mode == "removable")      // pry notch at the far end (fingernail / flat screwdriver)
             translate([L - wall - plug_fx - 1.0, W/2 - 3, -eps]) cube([1.0 + eps, 6, 0.6]);
@@ -945,7 +948,7 @@ debug_pairs = [
 ];
 module obj(n) {
     if (n == "body") body();
-    else if (n == "plug") plug();
+    else if (n == "plug") plug(ribs = false);   // crush ribs interfere by design
     else if (n == "cell") cell_dummy();
     else if (n == "cell_swollen") cell_swollen();
     else if (n == "ntc_wire_room") ntc_wire_room();

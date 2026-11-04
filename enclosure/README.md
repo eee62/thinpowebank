@@ -28,6 +28,8 @@ Files
 | `enclosure/powerbank.scad` | The model. Parameters at the top, one module per part |
 | `enclosure/tools/run_checks.sh` | Runs the asserts, all intersection pairs and the part renders |
 | `enclosure/tools/stl_volume.py` | Volume of an STL. An intersection with < 0.001 mm³ counts as touching only |
+| `enclosure/check_results/` | Output of the full check run for 7 configurations |
+| `enclosure/img/` | Preview renders |
 | `tools/*.py` | How the STEP, Eagle and DXF files were measured (`pip install cadquery-ocp ezdxf`) |
 | `reference/XIAO_ESP32S3_Sense.step` | Your STEP file, copied from the upload. It was not in the repo |
 | `reference/measurements.txt` | Raw measurement output that the tables below are taken from |
@@ -247,11 +249,20 @@ Run by me here, with OpenSCAD 2021.01 (`apt-get install openscad` worked):
 
 | Check | Result |
 |---|---|
-| `assert()` pass, 25 asserts, every configuration below | PASS, no warnings |
-| 47 must-not-touch pairs, `part="debug"`, CGAL intersection each, rounded | **47 / 47 PASS** |
-| same, sharp | **47 / 47 PASS** |
-| same: removable plug, connectors removed + antenna over cell, front port, no button (sharp), tact 8 mm + SD card | see `tools/run_checks.sh` output below |
-| Every printable part renders as a simple (manifold) solid | PASS |
+| `assert()` pass (25 asserts) | PASS, no warnings, in all 7 configurations |
+| 47 must-not-touch pairs (`part="debug"`, one CGAL intersection per pair) | **47 / 47 PASS** in each configuration: rounded (default), sharp, removable plug, connectors removed + antenna over cell, front port, no button (sharp), tact 8 mm + SD card |
+| Every printable part (body, plug, covers A/B/C, cap, coupon) renders as one simple (manifold) solid | PASS in all 7. The coupon is 2 solids by design (plate + loose test core) |
+
+Logs: `enclosure/check_results/*.log`.
+
+The checks found five real bugs in the earlier version. All are fixed, and the logs above are from the fixed model:
+- The bq25185 post shoulder clipped its small parts (0.64 mm³).
+- The USB-C opening was a stadium; the receptacle has r 1.25 corners (0.46 mm³).
+- Front port: the standing board and its pads sat in the rounded corner (24.5 mm³), and its guides floated.
+- A 3 mm bay pushed a ledge into lane A.
+- An inserted SD card hit the XIAO end posts.
+
+The default build had only the first two.
 
 Pairs cover:
 - body and plug against every component dummy, the wire lanes and the plug keep-outs
