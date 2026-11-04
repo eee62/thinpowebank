@@ -216,7 +216,7 @@ part_t     = 1.0;   // partition wall between electronics and cell
 // =============================================================================
 usbc_shell_w = bq_usb[1] - bq_usb[0];   // 8.94
 usbc_shell_h = bq_usb[5] - bq_usb[4];   // 3.21
-usb_well_w = 12.4;   // USB-C plug overmold envelope, spec max 12.35 x 6.5 (rounded up)
+usb_well_w = 12.4;   // USB-C plug overmold envelope. ASSUMED 12.35 x 6.5 (not confirmed): MEASURE YOUR CABLE
 usb_well_h = 6.6;
 usb_well_d = 1.5;    // depth of the flush-cover well
 usb_inner_wall = 1.0;
@@ -555,10 +555,10 @@ module tact_cradle_solid() {
     cbox([tact_x, tact_y, Ztb + 1.0], [tact_cradle, tact_cradle, Zw - Ztb - 1.0 + eps]);
 }
 
-// --- cell stops at the lead end (touch only the sealed side edges) ---
+// --- cell stops at the lead end: round posts (no sharp edge toward the pouch), touch only the sealed side edges ---
 module cell_stops() {
-    for (yy = [y_cellb + 0.5, y_cellb + cell_w - 3.0])
-        bx([x_cell - 1.0, yy, Zc + 1.5], [x_cell, yy + 2.5, Zw + eps]);
+    for (yy = [y_cellb + 1.75, y_cellb + cell_w - 1.75])
+        translate([x_cell - 1.25, yy, Zc + 1.5]) cylinder(d = 2.5, h = Zw - Zc - 1.5 + eps);
 }
 
 // --- ledges the plug rests on (low enough to pass under the cell and boards) ---
