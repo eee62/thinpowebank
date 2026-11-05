@@ -20,7 +20,7 @@
 // =============================================================================
 
 /* [What to render] */
-// assembled | exploded | section | body | plug | usb_cover_A | usb_cover_B | usb_cover_C | button_cap | coupon | debug
+// assembled | exploded | section | layout | body | plug | usb_cover_A | usb_cover_B | usb_cover_C | button_cap | coupon | debug
 part = "assembled";
 // "sharp" = version 1 (square edges), "rounded" = version 2
 style = "rounded";
@@ -209,8 +209,6 @@ lane_spare = 1.0;   // >= 1 mm spare clearance on every bundle
 laneA_w = 0.5 + wire_sig_d + lane_spare + 0.4;   // XIAO castellation side: joint 0.5 + wire + spare (+0.4 bend) = 2.7
 laneB_w = qt_plug_zone;                          // between MAX and XIAO: QT plug + battery jumper + NTC
 laneC_w = wire_sig_d + lane_spare + 0.2;         // button wires along the +Y wall = 2.0
-port_w  = 2*wire_pwr_d + 2*ntc_wire_d + lane_spare;  // partition tunnel: cell leads + NTC
-port_h  = wire_pwr_d + lane_spare;
 ribbon_bay = 6.0;   // minimum X gap row1/row2, S-folds the spare ribbon
 heat_gap   = 3.0;   // air gap between electronics and the cell lead zone when there is no antenna bay
 shelf_w = 2*wire_pwr_d + 2*ntc_wire_d + lane_spare;   // cross-bay wires: cell leads + NTC (+1 mm spare)
@@ -1010,6 +1008,10 @@ module debug_view() {
 if (part == "assembled") assembled(0);
 else if (part == "exploded") assembled(explode);
 else if (part == "section") intersection() { assembled(0); translate([-1, -1, -1]) cube([L + 2, cam_y + 1, T + 2]); }
+else if (part == "layout") {   // parts + plug zones (orange) + access columns (green) + antenna keep-out (cyan), no body
+    components(); color("ivory") plug();
+    color("orange", 0.5) plug_zones(); color("green", 0.25) access_zones(); color("cyan", 0.25) antenna_keepout();
+}
 else if (part == "body") body();
 else if (part == "plug") plug();
 else if (part == "usb_cover_A") usb_cover(0);

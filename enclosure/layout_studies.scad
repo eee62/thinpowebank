@@ -11,6 +11,7 @@ include <powerbank.scad>
 study = 1;            // 1 = boards under the cell (two decks), 2 = MAX17048 stacked on the bq25185
 study_view = "assembled";   // assembled | debug
 study_pair = -1;
+study_shell = false;  // draw the outer shell in the assembled view (opaque in PNG exports)
 
 // ---------- common front-wall chains (anchored to the front wall, so they move with T) ----------
 function cam_z0(zw)   = zw - win_t - win_recess_extra - cam_plate_t - cam_block_h;
@@ -146,7 +147,7 @@ sL = study == 1 ? s1_L : s2_L;  sW = study == 1 ? s1_W : s2_W;  sT = study == 1 
 echo(str("STUDY ", study, " LOWER-BOUND SIZE: L x W x T = ", sL, " x ", sW, " x ", sT, " mm, volume ", sL*sW*sT/1000, " cm3"));
 
 if (study_view == "assembled") {
-    color("white", 0.3) so("shell");
+    if (study_shell) color("white", 0.3) so("shell");
     color("ivory") so("shelf");
     color("silver") so("cell");
     color("darkgreen") so("xiao");

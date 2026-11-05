@@ -1,10 +1,11 @@
-== 1. asserts / echo  (-D plug_mode="removable")
-"OUTER SIZE (rounded, port edge, connectors kept, antenna bay): L x W x T = 175.699 x 54.08 x 10.98 mm"
+== 1. asserts / echo  (-D style="rounded")
+"OUTER SIZE (rounded, port edge, connectors kept, antenna bay): L x W x T = 188.899 x 54.08 x 10.98 mm"
 "Thickness drivers (interior heights): XIAO 8.98 cell 8.8 bq 8.37 MAX 8.37 camera 8.1 tact 8.45 switch 8.8 front-port 35.1 -> Hi = 8.98"
-"Layout X: row1 2.7..28.1  gap 8  row2 36.1..61.167  bay 61.167..82.367  partition 82.367..83.367  head zone ..88.367  cell pocket 88.367..174.699"
+"Layout X: row1 2.7..28.1  gap 16  row2 44.1..67.567  antenna bay 67.567..96.567  lead zone ..101.567  cell pocket 101.567..187.899"
+"Antenna: sticker X 72.567..91.567, keep-out 5 mm; gap to cell foil 10.6 mm; cell leads must reach 73.567 mm (else a JST-PH extension)"
 "Rounded-corner growth at cell corners: 0.132233 mm per side; corner keep-out 0.87868"
 "Lens: opening r_in 5.2 (needs 4.27128), r_out 6.93205, lens-disc gap 0.6, max FOV 133.23"
-"Plug fit per side: X 0.521098  Y 0.2"
+"Plug fit per side: X 0.610698  Y 0.25"
 asserts: PASS
 == 2. must-not-touch pairs
 DEBUG pair 0: body & cell                     EMPTY        PASS
@@ -54,7 +55,27 @@ DEBUG pair 43: usb_cover & bq                 EMPTY        PASS
 DEBUG pair 44: body & cell_swollen            EMPTY        PASS
 DEBUG pair 45: antenna & cell_swollen         EMPTY        PASS
 DEBUG pair 46: plug & ntc_wire_room           EMPTY        PASS
-pairs: 47 pass, 0 fail (of 47)
+DEBUG pair 47: antenna_keepout & cell_swollen EMPTY        PASS
+DEBUG pair 48: antenna_keepout & xiao         0.000000 mm3 (touch) PASS
+DEBUG pair 49: antenna_keepout & bq           EMPTY        PASS
+DEBUG pair 50: antenna_keepout & max          EMPTY        PASS
+DEBUG pair 51: antenna_keepout & camera       EMPTY        PASS
+DEBUG pair 52: antenna_keepout & switch       EMPTY        PASS
+DEBUG pair 53: antenna_keepout & tact         EMPTY        PASS
+DEBUG pair 54: antenna_keepout & ntc          EMPTY        PASS
+DEBUG pair 55: antenna_keepout & lanes        EMPTY        PASS
+DEBUG pair 56: antenna_keepout & plug_zones   EMPTY        PASS
+DEBUG pair 57: access & body                  EMPTY        PASS
+DEBUG pair 58: access & cell                  EMPTY        PASS
+DEBUG pair 59: access & xiao                  EMPTY        PASS
+DEBUG pair 60: access & bq                    EMPTY        PASS
+DEBUG pair 61: access & max                   EMPTY        PASS
+DEBUG pair 62: access & camera                EMPTY        PASS
+DEBUG pair 63: access & switch                EMPTY        PASS
+DEBUG pair 64: access & tact                  EMPTY        PASS
+DEBUG pair 65: access & antenna               EMPTY        PASS
+DEBUG pair 66: access & button_cap            EMPTY        PASS
+pairs: 67 pass, 0 fail (of 67)
 == 3. printable parts render as simple solids
 body         simple=yes volumes=2 (2 = one solid) PASS
 plug         simple=yes volumes=2 (2 = one solid) PASS

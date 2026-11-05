@@ -1,49 +1,61 @@
 # Thin desk power bank: enclosure (OpenSCAD)
 
-**Bottom line**
-- **Outer size:** **175.7 × 54.1 × 11.0 mm** for version 2 (rounded), **175.6 × 54.1 × 11.0 mm** for version 1 (sharp). The cell alone is 85 × 50 × 6.3.
-- **Thickness:** the XIAO stack sets it, not the cell. The stack is 8.03 mm from the STEP file, plus 0.6 for the solder joints and 0.35 for ribbon and clearance.
-- **Length:** the electronics take about 87 mm, as much as the cell bay.
-- **Shrinking it:** the options are listed in [Size](#size-and-how-to-make-it-smaller). The biggest single saving is the antenna bay, 13.2 mm.
-- **Checks:** OpenSCAD 2021.01 ran here. Every assert and every must-not-touch pair passes in both versions; results are in [Verification](#verification).
-- **Unmeasured parts:** the cell, the camera head and the antenna are still parameters. **Measure them before you order.**
+**Bottom line: layout 3 (single deck, antenna bay) is the smallest layout that meets both rules.**
+- **Outer size:** **188.9 × 54.1 × 11.0 mm** for version 2 (rounded), **188.8 × 54.1 × 11.0 mm** for version 1 (sharp). That is 112 cm³. The cell alone is 85 × 50 × 6.3.
+- **Rule 1, unplugging:** every JST-PH and STEMMA QT plug can be pulled from the back opening with ≥ 3 mm finger room on each side. Nothing else has to come out first. The camera-FPC latch also faces the back.
+- **Rule 2, antenna:** **5.0 mm** from the nearest metal (the XIAO end) and **10.6 mm** from the cell foil. It is never over the cell. Plastic surrounds it on 4 sides: both side walls, the front wall and the plug.
+- **Checks:** **67 / 67 pass** in version 1, version 2 and removable-plug mode. That is your 47 collision pairs, plus 10 antenna keep-out pairs and 10 finger-access pairs.
+- **Cost against the previous design** (175.7 mm long, which broke both rules): **+13.2 mm of length**. The breakdown is in [Size](#3-size-and-layout-comparison).
+- **STLs** are in `enclosure/stl/`. **Measure the cell (lead length too), camera head, antenna and cable overmold before ordering.**
 
 | Version 2 (rounded) | Version 1 (sharp) |
 |---|---|
 | ![rounded](img/front_rounded.png) | ![sharp](img/front_sharp.png) |
 
+Layout seen from the front, body hidden. The colours are the dummies, the plug zones (orange), the finger-access columns (green) and the antenna keep-out (cyan):
+
+![layout](img/layout_top.png)
 ![exploded](img/exploded_rounded.png)
 
-Inside of the body (seen from the back, plug removed), section through the lens, plug, fit coupon:
+Inside of the body (seen from the back, plug removed): the bay fences, and the wire shelf along the near wall. Then the plug:
 
 ![inside](img/body_inside.png)
-![section](img/section_lens.png)
 ![plug](img/plug.png)
-![coupon](img/coupon.png)
 
 Files
 
 | File | What |
 |---|---|
-| `enclosure/powerbank.scad` | The model. Parameters at the top, one module per part |
-| `enclosure/tools/run_checks.sh` | Runs the asserts, all intersection pairs and the part renders |
+| `enclosure/powerbank.scad` | The model (layout 3). Parameters at the top, one module per part |
+| `enclosure/stl/` | Exported STLs, see the list below |
+| `enclosure/layout_studies.scad` | Placement models of layouts 1 and 2, used for the comparison table |
+| `enclosure/tools/run_checks.sh` | Runs the asserts, all 67 intersection pairs and the part renders |
+| `enclosure/tools/run_studies.sh` | Runs the 42 placement checks for each of layouts 1 and 2 |
 | `enclosure/tools/stl_volume.py` | Volume of an STL. An intersection with < 0.001 mm³ counts as touching only |
-| `enclosure/check_results/` | Output of the full check run for 7 configurations |
+| `enclosure/check_results/` | Check output |
 | `enclosure/img/` | Preview renders |
 | `tools/*.py` | How the STEP, Eagle and DXF files were measured (`pip install cadquery-ocp ezdxf`) |
-| `reference/XIAO_ESP32S3_Sense.step` | Your STEP file, copied from the upload. It was not in the repo |
-| `reference/measurements.txt` | Raw measurement output that the tables below are taken from |
+| `reference/XIAO_ESP32S3_Sense.step` | Your STEP file, copied from the upload |
+| `reference/measurements.txt` | Raw measurement output |
 
-Exporting (you export the STLs yourself):
+STLs in `enclosure/stl/` (all render as single manifold solids):
+
+| File | Part |
+|---|---|
+| `body_v2_rounded.stl`, `body_v1_sharp.stl` | Body (tray), version 2 / version 1 |
+| `plug_v2_rounded.stl`, `plug_v1_sharp.stl` | Bottom plug, permanent (epoxy) |
+| `plug_v2_rounded_removable.stl`, `plug_v1_sharp_removable.stl` | Bottom plug, removable (crush ribs). Use this while developing |
+| `usb_cover_A.stl`, `_B`, `_C` | Charging-port cover, three fits |
+| `button_cap.stl` | Button cap (prints head down) |
+| `fit_coupon.stl` | Fit coupon. Print it first |
+
+To re-export after changing a parameter:
 
 ```
-openscad -o body.stl        -D 'part="body"'        -D 'style="rounded"' enclosure/powerbank.scad
-openscad -o plug.stl        -D 'part="plug"'        enclosure/powerbank.scad
-openscad -o usb_cover_A.stl -D 'part="usb_cover_A"' enclosure/powerbank.scad   # also _B and _C
-openscad -o button_cap.stl  -D 'part="button_cap"'  enclosure/powerbank.scad
-openscad -o coupon.stl      -D 'part="coupon"'      enclosure/powerbank.scad
+openscad -o body.stl -D 'part="body"' -D 'style="rounded"' enclosure/powerbank.scad   # part = body | plug | usb_cover_A/B/C | button_cap | coupon
 ```
-Views: `assembled`, `exploded`, `section` (cut through the lens) and `debug` (intersections). Switches: `style` (`sharp` or `rounded`), `charge_port` (`edge` or `front`), `plug_mode` (`permanent` or `removable`), `has_button`, `antenna_place` (`bay`, `over_cell` or `none`), `board_connectors` (`kept` or `removed`), `vents`, `show_lanes`.
+- **Views:** `assembled`, `exploded`, `section` (cut through the lens), `layout` (no body, with zones and keep-out), `debug` (intersections).
+- **Switches:** `style`, `charge_port`, `plug_mode`, `has_button`, `antenna_place` (`bay` or `none`), `board_connectors`, `vents`, `show_lanes`.
 
 ---
 
@@ -99,76 +111,96 @@ Confidence levels: **confirmed** = two independent sources agree, or a manufactu
 `tools/stepbb.py` reads the STEP file with OpenCascade (XCAF) and walks the assembly tree, applying each placement. It prints the exact bounding box of every part in the file's global frame. `stepsolids.py` lists solids and cylinder radii, and `slice.py` cuts planes through a part. The raw output is in `reference/measurements.txt`.
 - **STEP frame:** x runs along the board, with the USB-C at +x (PCB x −8.673…12.282). y is the stack axis (XIAO PCB back at y = −0.250, top 1.000). z runs across the board (−15.001…2.779).
 - **Local frame (u, v, w):** `u = 12.282 − x`, `v = z + 15.001`, `w = y + 0.250`. That is u from the USB-end PCB edge, v across, w up from the PCB back.
-- **Enclosure:** `X = Xx0 + u`, `Y = Yx0 + v`, `Z = Zx + w`. The STEP → enclosure rotation (x→−X, z→Y, y→Z) has determinant +1, so it is a proper rotation, not a mirror. The XIAO's USB-C points into the case (−X), toward the row gap, where it needs no access.
+- **Enclosure:** the stack is **flipped** so the camera-FPC latch faces the back opening: `X = Xx0 + u`, `Y = Yx0 + 17.78 − v`, `Z = Zxb − w` (Zxb = PCB back, 0.6 below the front wall). Overall STEP → enclosure is x→−X, z→−Y, y→−Z. That has determinant +1, so it is a proper rotation, not a mirror. The XIAO's USB-C points into the case (−X), toward the row gap, where it needs no access.
 
 ---
 
-## 2. Layout concept
+## 2. Layout concept (layout 3)
 
-From the charging end (X = 0) to the far end. Front face = +Z, back plug = Z 0.
+From the charging end (X = 0) to the far end. Front face = +Z, back plug = Z 0. All plugs are reached from the back with the plug off.
 
 1. **Row 1, at the end wall.**
-   - **bq25185**, flat, components up. Its USB-C sits in the end wall in a flush-cover well. Its JST-PH ports face into the row gap.
-   - **Small-parts column** beside it, all hung from the front wall: **slide switch** nearest the end, **button** in the corner, **camera head** behind its window.
-2. **Row gap**, 8 mm. Room for the mated JST plugs, and for the camera ribbon's S-fold.
+   - **bq25185** lies flat. Its USB-C sits in the end wall in a flush-cover well, and its two JST-PH ports face +X.
+   - **Small-parts column** beside it: **slide switch**, **button**, **camera head** behind its window. All hang from the front wall.
+2. **Row gap, 16 mm:** two plug zones in series.
+   - The bq25185 plug zone (8 mm), then the MAX17048 plug zone (8 mm). The plugs face each other, and each has its own clear column down to the back opening, ±3 mm wider than the plugs.
+   - The camera ribbon crosses the +Y half of the gap, away from the plugs, and S-folds its spare length there.
 3. **Row 2.**
-   - **MAX17048**, flat, JST ports facing the bay.
-   - **Lane B**, 6 mm: the QT cable, the battery jumper, the NTC wires and the XIAO's wires.
-   - **XIAO stack**, flat, expansion board up. Its own USB-C points into the gap.
-   - **Lane A**, 2.7 mm, along the wall.
-   - The camera ribbon leaves the XIAO connector over the socket. It crosses the gap straight into the camera head's port. The head is aligned with the connector (Y 41.5) to keep the run short: about 38 mm used, about 27-32 mm spare to fold.
-4. **Bay**, 21.2 mm.
-   - The **antenna** lies flat on the plug in a locating frame.
-   - Nothing metal lies over the antenna except the MAX JST plugs, 2.4 mm above it.
-   - The bay doubles as the **thermal buffer** between the charger/XIAO and the cell.
-5. **Partition**, 1 mm, full height. A wire **tunnel** at the plug side carries the cell leads and the NTC wires.
-6. **Lead zone**, 5 mm: protection board, lead bends, plug.
-7. **Cell bay.**
-   - The cell rests on two **rails** (1.5 mm) on the plug.
-   - The **NTC** sits flat in a seat between the rails, flush with the rail tops, so it touches the cell without pressing.
-   - Its wires run in the channel between the rails. A foam pad above the cell is optional.
+   - **MAX17048**, turned so its JST-PH ports face −X into the gap. Its STEMMA QT faces +Y into lane B (6 mm), with its own access column.
+   - **XIAO stack, flipped:** expansion board toward the back opening, so the camera-FPC latch can be reached. The XIAO PCB back faces the front wall, with 0.6 mm for the battery-pad solder joints.
+   - **Lane A** (2.7 mm) along the wall.
+4. **Antenna bay, 29 mm** (5 + 19 + 5).
+   - The antenna sticker lies flat on the plug in a locating frame. No metal within 5 mm of it.
+   - Two low plastic **fences** (up to 5 mm above the antenna) stop wires sagging in from either side.
+   - The cross-bay wires (cell leads, NTC) ride on a **wire shelf** along the −Y wall. Its top is 5.0 mm above the antenna, and a lip keeps the wires from rolling off.
+   - The bay is also the thermal buffer between the electronics and the cell.
+   - The XIAO's U.FL coax (about 10-20 mm) is the antenna's own feed, so it is not counted as foreign metal.
+5. **Lead zone**, 5 mm: protection board, lead bends.
+6. **Cell bay**, as before: rails, NTC seat, round end stops.
 
-Wires (all assumed): cell leads, LOAD and switch 24-26 AWG silicone, Ø1.2. Button, I2C and NTC extension 28-30 AWG, Ø0.8. NTC leads Ø0.5. Every lane is the bundle plus ≥ 1.0 mm. `lanes()` holds them, and the checks confirm that no printed material enters them.
-
-Front face: switch slot with fingernail scoop at (7.3, 36.5), button Ø5.5 at (6.4, 46.6), lens opening Ø10.4 inside → Ø13.9 outside at (20.8, 41.5). The USB-C well is on the end face at Y 17.1, Z 5.2.
+**Wiring**
+- **Battery:** cell → over the shelf → over the MAX → **MAX JST (battery side) in the gap**. The MAX's other JST → short jumper inside the gap → **bq25185 BATT**.
+- **Power:** bq25185 LOAD (JST) → switch → XIAO BAT pads. QT cable MAX → XIAO through lane B. NTC → shelf → over the MAX → gap → over the bq25185 → TH pad.
+- **Wire sizes and lanes:** as before. Ø1.2 power, Ø0.8 signal, Ø0.5 NTC, bundle + 1 mm in every lane. No lane enters the antenna keep-out; the checks confirm it.
 
 ---
 
-## 3. Size, and how to make it smaller
+## 3. Size and layout comparison
 
-| Build | L × W × T (mm) |
+**The three layouts tried**, all with connectors kept, the access rule and the 5 mm antenna rule:
+
+| Layout | L × W × T (mm) | Volume | Footprint | Rules | Checks | How far it was modelled |
+|---|---|---|---|---|---|---|
+| **3 · single deck, antenna bay (chosen)** | **188.9 × 54.1 × 11.0** | **112.2 cm³** | 102 cm² | both met | **67 / 67** | full printable model |
+| 1 · boards in a deck under the cell | ≥ 117.8 × 54.3 × 20.6 | ≥ 131.6 cm³ | 64 cm² | both met | 42 / 42 (placement) | placement model, lower bound |
+| 2 · MAX17048 stacked on bq25185 | ≥ 191.0 × 53.5 × 17.9 | ≥ 183.2 cm³ | 102 cm² | both met | 42 / 42 (placement) | placement model, lower bound |
+
+Layouts 1 and 2 are placement models in `layout_studies.scad`. They hold the measured part models, the walls, the cell, the antenna with its keep-out, the plug zones and the access columns, and they pass their own 42 collision/rule checks. Posts, fences and guides are left out, and **those could only make them bigger**. Since their lower bounds are already larger than layout 3's full printable model, layout 3 is the smallest.
+
+![study 1](img/study1.png)
+![study 2](img/study2.png)
+
+- **Layout 1:**
+  - **Pros:** the smallest footprint, 37 % less than layout 3.
+  - **Cons:** almost **double the thickness**. The board deck (8.98) and the cell deck (8.8) stack, with a 0.8 mm shelf between.
+  - **Also:**
+    - The charger sits under the cell with only shelf + air between them, which works against your heat rule.
+    - The cell has to go in before a separate shelf part.
+    - If desk footprint matters more to you than thickness, this is the layout to detail next.
+- **Layout 2:** the MAX17048 has to clear the bq25185's 7.2 mm JST tops, which adds 6.9 mm of thickness. Its plug zone still needs a clear column down to the back opening, so it saves no length either. It is worse on every measure.
+
+**Layout 3 against the previous design** (175.7 × 54.1 × 11.0, which broke both rules): **+13.2 mm of length.**
+
+| Change | mm |
 |---|---|
-| **Version 2, rounded (default)** | **175.7 × 54.1 × 11.0** |
-| **Version 1, sharp** | **175.6 × 54.1 × 11.0** |
-| Cell alone | 85 × 50 × 6.3 |
-| Cell plus margins and walls only | 88.2 × 53.2 × 9.3 |
+| Second plug zone in the row gap (gap 8 → 16) | +8.0 |
+| Antenna bay to 5 + 19 + 5 (was 21.2 + 1.0 partition) | +6.8 |
+| Row 2 ends at the last metal, no post margin | −1.6 |
 
-**What sets each dimension** (interior heights, mm):
-- XIAO stack **8.98**. The cell (rails, cell, swell, tolerance) needs 8.80, the switch 8.80, the MAX and bq 8.37, the tact switch 8.45, the camera 8.10.
-- The width comes from row 2: 0.2 + 25.4 (MAX) + 6.0 (lane B) + 17.78 (XIAO) + 2.7 (lane A) = 52.08 inside. The cell needs only 51.2.
+**What layout 3 trades off**
+- **Antenna placement.** The antenna sits in a **middle bay, not an end bay or corner**. Both end-bay versions I tried came out larger:
+  - At the charging end, the bq25185 USB-C needs the same end wall.
+  - At the far end, the antenna is more than 100 mm from the XIAO's U.FL lead.
+  - Every metal edge is ≥ 5 mm away, and plastic is on the other four sides.
+- **Cell leads must reach about 74 mm** (model value `cell_lead_need`, printed on every run) to the MAX JST in the gap. If your cell's leads are shorter, add a JST-PH 2-pin extension. That is a cable, not a change to the circuit.
+- **Wire routing.** The cross-bay wires must ride on the shelf, 5 mm above the antenna, not under it.
+- **Thermal.** The partition is gone: the 29 mm bay is the thermal buffer. The charger is now 74 mm from the cell foil and the XIAO 34.6 mm.
+- **XIAO flip.** The camera latch is reachable now, and the battery-pad joints face the front wall instead.
 
-**Charging port on the front face: what it costs.** The receptacle points along the board, so the board has to stand on edge with its 25.4 mm depth through the thickness.
+**What can still not be unplugged** (by the parts' own design, not the enclosure):
+- The XIAO's battery wires are soldered (it has no battery connector).
+- Its U.FL antenna socket sits **under the expansion board** (STEP: u 17.7-20.7). Unplugging the antenna needs the expansion board lifted.
+- Everything else (bq25185 BATT and LOAD, both MAX JSTs, the MAX QT, the camera FPC) comes out from the back.
 
-| Front USB-C | T |
-|---|---|
-| connectors kept: the JST plugs then point into the back too | **37.1 mm** (+26.1) |
-| connectors removed | **29.3 mm** (+18.3) |
-| edge port (default) | 11.0 mm |
+**Rule 1 needs the plug off.** Use `plug_mode="removable"` (`plug_*_removable.stl`) while developing. With the permanent epoxy plug, nothing can be unplugged.
 
-With `charge_port="front"` the length drops by 2.5 mm, because the end-wall well goes away.
-
-**Ways to shrink it.** The first rows are model-derived: run them with `-D`.
-
-| Change | Size | Saving | Cost |
-|---|---|---|---|
-| `antenna_place="over_cell"` | 162.5 × 54.1 × 11.0 | −13.2 L | Antenna sits about 1.2 mm above the pouch's metal foil, so expect weaker RF |
-| `board_connectors="removed"` (desolder the JST-PH and QT, solder wires) | 173.7 × 54.1 × 11.0 | −2.0 L | No unplugging. The gap stays 6 mm for the ribbon fold |
-| both of the above | **155.5 × 54.1 × 11.0** | −20.2 L | both |
-| `has_button=false` | 175.7 × 54.1 × 11.0 | 0 | the button never drives the size |
-| corner_r 3 / 5 / 6 / 8 | 175.6 / 176.0 / 176.3 × 54.6 / 177.5 × 55.8 | — | the rounded corners eat into the cell corners. Up to r 5 only the length grows |
-| **Stack the MAX on the bq** (connectors removed), move the XIAO beside the bq, move switch, button and camera over the bay | ~147 × ~58 × 11 | −28 L, +4 W | **estimate, not modelled.** MAX 2.37 tall + 0.5 gap over the bq's low parts fits under 9 mm |
-| Power the XIAO without the solder joints under the BAT pads | −0.6 T | | electronics decision, yours |
-| Thinner cell or a different XIAO stack | | | the stack, not the cell, sets T. A thicker cell (up to about 6.5 + 0.8 swell) costs no extra thickness |
+**Other switches (for reference, from the model):**
+- `antenna_place="none"`: 162.9 long. **Breaks the Wi-Fi rule.**
+- `board_connectors="removed"`: 178.9 long. **Breaks the unplug rule.**
+- `charge_port="front"`: 180.4 × 54.1 × **37.1**.
+- `tact_h` 6 / 7 / 8: T 11.45 / 12.45 / 13.45.
+- `corner_r` 6: 189.5 × 54.6.
+- An SD card fitted: T 11.45.
 
 ---
 
@@ -187,8 +219,8 @@ Rule: a printed pocket around a bought part gets **0.10 per side**. With the poc
 | Board pins Ø2.2 in Ø2.5 PCB holes (±0.08 drilled) | | 0.01 / 0.29 | `fit_pin_pcb` |
 | USB-C cover core in well | 12.0 × 6.2 in 12.4 × 6.6 | 0 / 0.40 | `cover_core_fit` |
 | Cover crush ribs A / B / C | +0.05 / +0.10 / +0.15 interference | A −0.15…+0.25, B −0.10…+0.30, C −0.05…+0.35 | `cover_rib_interf` |
-| Bottom plug, permanent: X (L 173.7 → ±0.52) / Y | 0.57 / 0.25 | X 0.05 / 1.09, Y 0.05 / 0.45 | `plug_fx`, `plug_fy` |
-| Bottom plug, removable | X 0.52, Y 0.20 + ribs 0.08 | ribs −0.12…+0.28 interference | `plug_rib_interf` |
+| Bottom plug, permanent: X (L 186.9 → ±0.56) / Y | 0.61 / 0.25 | X 0.05 / 1.17, Y 0.05 / 0.45 | `plug_fx`, `plug_fy` |
+| Bottom plug, removable | X 0.56, Y 0.20 + ribs 0.08 | ribs −0.12…+0.28 interference | `plug_rib_interf` |
 | Hold-down pads (XIAO, boards, camera, switch, tact) | 0.20 short | 0 / 0.40 | `pad_float` |
 | XIAO stack under the front wall | 0.20 (ribbon 0.15 on top) | 0 / 0.40 | `clr_z` |
 | Lens to window disc | 0.60 | 0.40 / 0.80 | `cam_plate_t`, `win_recess_extra` |
@@ -196,7 +228,7 @@ Rule: a printed pocket around a bought part gets **0.10 per side**. With the poc
 | Swell room above the cell (6.3 nominal) | 1.18 | 0.98. **0.68 if the cell is +5 % (6.6)** | `cell_swell` |
 | Cell length / width margin | 1.33 / 2.08 | ≥ 1.13 / ≥ 1.88 | `cell_margin_*` |
 
-The plug seam at the two ends can be up to 1.1 mm wide in the worst case. That is the ±0.3 % rule on 174 mm. Parts from one print job usually scale together, so expect less. Fill it with epoxy and sand flush.
+The plug seam at the two ends can be up to 1.2 mm wide in the worst case. That is the ±0.3 % rule on 187 mm. Parts from one print job usually scale together, so expect less. Fill it with epoxy and sand flush.
 
 **Fit coupon** (`part="coupon"`, 82 × 95 × 4.3). Each row is the real recess at **0.10 / 0.15 / 0.20 / 0.25** per side, with the number engraved:
 - camera pocket
@@ -226,63 +258,49 @@ Print it first, wait a week (drift), and pick the tightest one that fits. Then s
   - **Buy: Ø12.0 × 1.0 mm clear acrylic (PMMA) or glass disc.** Ø14 × 1.0 also fits the ring (raise `win_d`).
   - A clear printed window (JLC clear resin, polished) would work optically, but expect haze and yellowing. The design doesn't depend on it; 9000HE is opaque.
 - **Bottom plug.**
-  - `permanent`: a 0.05 epoxy film plus tolerance; it rests on ledges and on the partition.
+  - `permanent`: a 0.05 epoxy film plus tolerance; it rests on ledges and on the two bay fences.
   - `removable`: crush ribs on the long edges, and a pry notch at the far end.
   - **With the permanent plug the cell can't be inspected or replaced after assembly.**
 - **Switch.** The handle tip stands 0.5 above the face in a 0.8 deep fingernail scoop, so 1.3 mm of handle is exposed. Travel 2.0. A 2.5 mm boss (`sw_boss_t`) carries the slot.
 - **Button.** A printed cap with a flange that can't fall out, 0.2 above the plunger and 0.4 proud. The tact switch is glued into its pocket, and a backstop on the plug takes the press force. The cap needs the legs **trimmed to ≤ 1.8 mm**. Height check: 4.3 and 5 fit in 11.0 mm. **6 / 7 / 8 make the body 11.45 / 12.45 / 13.45 thick** (the model grows by itself).
-- **Antenna.** A 0.4 mm frame on the plug in the bay. `over_cell` puts a frame on the front wall above the cell instead.
+- **Antenna.** A 0.4 mm locating frame on the plug in the bay. Fences and a wire shelf keep all metal ≥ 5 mm away (see [Layout](#2-layout-concept-layout-3)). Placing it over the cell is no longer an option.
 - **Vents.** 1.2 × 5 slots in the side walls beside the charger and beside the XIAO (`vents=false` turns them off).
 - **Walls.** 1.0 everywhere, 0.8 worst case. Plug 1.0.
 
 ## Heat and cell safety
 - **Charger.** At the default 1 A charge rate, the linear bq25185 dissipates about 1.3 W at 3.7 V and up to about 2 W near empty (estimate, (5 V − Vbat) × 1 A). In this box that is the main heat source. **Electronics decision for you:** the board's IS jumper sets 500 mA, which halves the heat. Measure with a thermocouple on the first charge. I have not modelled the temperatures.
 - **XIAO.** Seeed measured **63.6 °C** on the back during camera use without a heat sink. **That is above the resin's 60 °C HDT.** The enclosure only touches it at 4 end posts and 2 pads, and the vents sit beside it. Duty-cycling the camera or adding a heat sink is your call. The OV5640 also runs warm.
-- **Separation.** The charger and XIAO are at least 25 mm from the cell (bay + partition + lead zone), and there is a 1.5 mm air gap under the cell.
+- **Separation.** The charger is 74 mm and the XIAO 34.6 mm from the cell foil, with the empty 29 mm antenna bay as the buffer. There is also a 1.5 mm air gap under the cell.
 - **Cell.** Swell room 1.18 nominal. The cell is located only by round posts at its sealed side edges and by the walls (≥ 1 mm away). Nothing presses on its faces: the rails carry it, and their edges are chamfered. A soft foam pad above it (≤ 1 mm) is optional.
 
 ---
 
 ## Verification
 
-Run by me here, with OpenSCAD 2021.01 (`apt-get install openscad` worked):
+Run by me here, with OpenSCAD 2021.01:
 
 | Check | Result |
 |---|---|
-| `assert()` pass (25 asserts) | PASS, no warnings, in all 7 configurations |
-| 47 must-not-touch pairs (`part="debug"`, one CGAL intersection per pair) | **47 / 47 PASS** in each configuration: rounded (default), sharp, removable plug, connectors removed + antenna over cell, front port, no button (sharp), tact 8 mm + SD card |
-| Every printable part (body, plug, covers A/B/C, cap, coupon) renders as one simple (manifold) solid | PASS in all 7. The coupon is 2 solids by design (plate + loose test core) |
+| `assert()` pass (25 asserts) | PASS, no warnings: v2, v1, removable, front port, no button, tact 8 mm, SD card, connectors removed, no antenna |
+| **67 pairs** (`part="debug"`, one CGAL intersection each): your 47 collision pairs + 10 antenna keep-out + 10 access | **67 / 67 PASS** in v2 rounded, v1 sharp and the removable plug |
+| Printable parts (body, plug, covers A/B/C, cap, coupon) render as one simple (manifold) solid | PASS. The coupon is 2 solids by design |
+| Exported STL bounding boxes | body v2 188.899 × 54.080 × 10.980, v1 188.767 × 54.080 × 10.980 = the reported sizes |
+| Layouts 1 and 2, 42 placement pairs each (`tools/run_studies.sh`) | 42 / 42 PASS each. One margin bug found and fixed in study 2 |
 
-Logs: `enclosure/check_results/*.log`.
+What the pairs cover:
+- **Your 47 pairs (0-46):** body and plug against every part dummy, lane and plug zone; the swollen cell; part against part.
+- **Pairs 47-56 (antenna rule):** the keep-out box against the swollen cell, XIAO, bq25185, MAX, camera, switch, button, NTC, every wire lane and every plug zone. It touches the XIAO's far end at exactly 5.0 mm (0 mm³) and is clear of everything else.
+- **Pairs 57-66 (unplug rule):** every finger-access column against the body, cell, all boards, camera, switch, button, antenna and cap.
 
-The checks found five real bugs in the earlier version. All are fixed, and the logs above are from the fixed model:
-- The bq25185 post shoulder clipped its small parts (0.64 mm³).
-- The USB-C opening was a stadium; the receptacle has r 1.25 corners (0.46 mm³).
-- Front port: the standing board and its pads sat in the rounded corner (24.5 mm³), and its guides floated.
-- A 3 mm bay pushed a ledge into lane A.
-- An inserted SD card hit the XIAO end posts.
+Logs are in `enclosure/check_results/` (`layout3_*.log`, `studies.log`). Rerun with `enclosure/tools/run_checks.sh -D 'style="sharp"'` and `enclosure/tools/run_studies.sh`.
 
-The default build had only the first two.
-
-Pairs cover:
-- body and plug against every component dummy, the wire lanes and the plug keep-outs
-- the swollen cell (+0.8) against body and antenna
-- the NTC wire channel
-- component against component
-- camera against window, and cap against tact
-
-"Touch" results have 0.000 mm³: designed contacts such as shoulder on PCB, plug on ledge, cap flange under the wall. Run them yourself with `enclosure/tools/run_checks.sh -D 'style="sharp"'` etc.
-
-**What this proves:** with the dimensions in the table, nothing overlaps, and the clearances computed in the asserts hold at worst-case ±0.2.
+**What this proves:** with the dimensions in the table, nothing overlaps, every plug has a clear way out the back, no modelled metal comes within 5 mm of the antenna, and the asserted clearances hold at worst-case ±0.2.
 
 **Not verified:**
-- The real cell, camera head, switch pins, antenna and cable overmold (all unmeasured).
-- Thermal behaviour.
-- Glue strength.
-- Whether the ribbon S-fold lies flat.
-- RF performance.
-- The front-port variant is modelled and checked for collisions, but its board-on-edge guides are basic.
-- Fit is only proven against my dummies. **Don't treat it as proof of fit until the coupon and the real parts agree.**
+- Real parts: cell, cell-lead length, camera head, antenna, plug-and-cable sizes, cable overmold.
+- Thermal behaviour, glue strength and RF performance. The 5 mm rule is geometric; antenna tuning was not measured.
+- The front-port variant was only assert-checked against the new rules.
+- Fit is only proven against my dummies. **Print the coupon and check the real parts before relying on it.**
 
 ## Measure with calipers before ordering
 1. **Cell:** thickness at the centre and at the seals, width, length *with and without* the protection board, where the leads exit, lead length → `cell_*`, `cell_head_zone`.
@@ -290,10 +308,12 @@ Pairs cover:
 3. **XIAO stack:** PCB back to the highest point of the socket → `xiao_stack_h`. Also the BAT-pad solder joint height → `xiao_solder_gap`.
 4. **Slide switch:** body height, handle height above the body, pin length → `sw_*`.
 5. **Tact switch:** total height, body size → `tact_h`.
-6. **Antenna:** length × width × thickness, cable length → `ant_*`.
+6. **Antenna:** length × width × thickness → `ant_*` (the bay length is 2 × 5 + its width). Also check the cable reaches about 20 mm from the XIAO's far end.
 7. **USB-C cable overmold:** width × height → `usb_well_*`.
 8. **The two Adafruit boards:** total height with connectors, and that the 25.4 / 20.32 outlines and hole positions match.
 9. **Window disc:** diameter and thickness → `win_d`, `win_t`.
+10. **Cell lead length:** from where the leads leave the cell to the plug, **≥ 74 mm** to reach the MAX JST. Shorter leads need a JST-PH extension.
+11. **Mated JST-PH / QT plug + cable bend:** if your plugs need more than 8 / 6 mm → `jst_plug_zone`, `qt_plug_zone`. Every 1 mm of `jst_plug_zone` adds 2 mm of length.
 
 ## Assumptions (all are parameters)
 - **Cell:** pouch corner r 0.5. Lead end needs 5 mm. The 85 includes the protection board. ±5 % tolerance per the listing.
@@ -307,3 +327,6 @@ Pairs cover:
 - **XIAO:** BAT-pad joints kept flat (≤ 0.6 mm) and the wires leave sideways, past the PCB edge.
 - **PCB thickness:** 1.57 ±0.15 (front-mode guides).
 - **"Bottom plug":** taken to be the back face, the one on the desk, opposite the front with the lens.
+- **Finger room:** 3 mm each side of a plug, across its mating direction (`finger_clr`). Access comes from the back, with the plug off.
+- **Antenna keep-out:** a box 5 mm around the sticker, up to 5 mm above it (`ant_keep`). This is stricter than a true 5 mm offset at the corners. Plastic is allowed inside, metal is not; the U.FL coax feeding it is exempt.
+- **Cell leads:** ≥ 74 mm long, or a JST-PH extension.
