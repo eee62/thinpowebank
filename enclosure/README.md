@@ -1,5 +1,134 @@
 # Thin desk power bank: enclosure (OpenSCAD)
 
+**Two models live here.** The **compact 70 × 100 × 12 mm** version (`powerbank70.scad`, the current request) is first. The **full-capacity** version (635085 cell, `powerbank.scad`, 187.1 mm long) follows from "Full-capacity version" and is unchanged apart from one corrected figure in section 5 (the fit coupon size).
+
+## Compact version: 70 × 100 × 12 mm (`powerbank70.scad`)
+
+**Bottom line: a 603450-class LiPo (1000–1500 mAh) with a small ceramic U.FL antenna fits: 99.80 × 68.96 × 11.78 mm nominal, 99.996 × 69.16 × 11.98 mm worst-case printed. A stick-on antenna fits with no cell in your 1000–1500 mAh range.**
+
+**Facts (from the model and its logs)**
+- **Default build** (603450 cell 6.0 × 34 × 50, ceramic 15 × 5 × 1.0, version 2 rounded): **99.80 × 68.96 × 11.78 mm**. Version 1 (sharp): 98.92 × 68.96 × 11.78. With a 10 × 4 antenna: 98.60 × 67.96 × 11.78.
+- **The hard limits are checked at the worst-case printed size** (nominal + JLC ±0.2 mm), not at the nominal size. This is the `limits_at_worst_case` switch. Worst case for the default build: 99.9957 × 69.16 × 11.98.
+- **All 25 asserts pass and all 82 collision pairs pass (no overlap volume; a few pairs touch face to face at exactly 0.000 mm³, e.g. the antenna on its frame and the plug on the body) in 13 configurations** (table under "Files and checks"). Every printable part renders as one simple solid in each.
+- Antenna: **24.36 mm from the cell foil** (rule ≥ 10), 5.0 mm keep-out from other metal (rule ≥ 5), 4.39 mm from the plug and from the front wall. Swelling room above the cell at +5 %: **1.98 mm** (rule: 0.8 + 0.2 print tolerance). Button ≤ 6.0 mm is an assert (`tact_h <= 6.0`, strict).
+- Every connector keeps its finger columns (3 mm each side, open to the back). The removable plug is the default. Strain relief: printed tie posts at the cell leads and in the bq25185 → MAX17048 gap. Other cables are tacked with adhesive (not modelled).
+
+**Analysis**
+- **The length is the binding dimension.** The antenna and the switch share the band above the cell, so each millimetre of antenna length adds 1 mm of outer length. With a 15 mm antenna the worst-case length is 99.9957 mm: **0.004 mm to spare**, and a 15.2 mm antenna fails. At ≤ 13 mm the length stops shrinking at 98.60 mm (worst case 98.80), because the camera and button row then sets it: 1.2 mm of room.
+- **Thickness is set by the XIAO stack**, not by the cell: the XIAO gap to the front wall is 1.4 mm (`xiao_wall_gap`). I first had 1.6 mm (T = 11.98), then saw that +0.2 mm of print tolerance would give 12.18 mm, so I cut it to 1.4 mm.
+- **Why a stick-on antenna fails with a 603450-class cell:** the cell block runs to 94.2 mm, so the switch and button cannot sit in the free corner beside it and go into the top band, next to the antenna. A 25 mm antenna there pushes the switch to 108.8 mm. A cell ≤ 41.25 mm long (503040 class, 520–620 mAh in listings) frees that corner, and then an antenna ≤ 28.3 × 9.8 mm fits.
+- **This is a limit of this one layout, not proof that no arrangement works.** My earlier 2-D packing search found other arrangements for some stick-on cases (cell turned, antenna in a side column). I did not model them, and their cell-lead route would cross the antenna keep-out, so I do not count them.
+
+**What is wrong with this layout (read before ordering)**
+1. **The USB-C charging port is on a long (100 mm) edge.** You chose the short edge earlier. The compact layout runs the bq25185 → MAX17048 stack along the 70 mm direction (63.1 mm long) beside the cell block (56.2 mm). Turning it so the port sits on the 70 mm edge puts both along the 100 mm direction: about 1.0 + 63.1 + 4.0 + 56.2 + 1.0 = **125 mm** (arithmetic from the model's numbers, not a simulation). If the long edge is not acceptable, the only options I can see are a smaller cell or a different board stack, which changes the electronics, so I have not done it.
+2. **Nothing from Shopee was verified.** Shopee TW returned nothing I could read, and Claude in Chrome is not available in this cloud session. Every size below is a standard code or a listing from another shop found by web search. Treat each as **unverified** until you measure the part.
+3. **Wire lanes are reserved boxes, not simulated cables.** The camera ribbon jog (4.76 mm over 9 mm) is not simulated. The antenna cable check is a straight line from the XIAO's U.FL socket to the antenna (9.8 mm minimum for the default); slack is not modelled.
+4. **The camera/radar update you sent earlier is still not applied.** There is no radar in this design.
+5. **The RCY splice option is not in the compact model.** The cell must be PH, or get a PH pigtail (section 6.3).
+
+### Cell × antenna: outer size and pass / fail
+
+| Cell (T×W×L mm) | mAh in listings (unverified) | ceramic 15×5 | ceramic 10×4 | stick-on 25×6 | stick-on 42×12 | stick-on 45×7 | stick-on 39×19 |
+|---|---|---|---|---|---|---|---|
+| 603450 (6.0×34.0×50.0) | 1000–1500 | **PASS**† 99.80 × 68.96 | **PASS**† 98.60 × 67.96 | fail **109.80** × 69.96 | fail **126.80** × **75.96** | fail **129.80** × **70.96** | fail **123.80** × **82.96** |
+| 603450max (6.0×34.5×52.0) | 1000–1500 | **PASS**† 99.80 × 69.46 | **PASS** 98.60 × 68.46 | fail **109.80** × **70.46** | fail **126.80** × **76.46** | fail **129.80** × **71.46** | fail **123.80** × **83.46** |
+| 503450 (5.0×34.0×50.0) | 950–1200 | **PASS**† 99.80 × 68.96 | **PASS** 98.60 × 67.96 | fail **109.80** × 69.96 | fail **126.80** × **75.96** | fail **129.80** × **70.96** | fail **123.80** × **82.96** |
+| 503450max (5.3×34.8×53.0) | 950–1200 | **PASS**† 99.80 × 69.76 | **PASS** 98.73 × 68.76 | fail **109.80** × **70.76** | fail **126.80** × **76.76** | fail **129.80** × **71.76** | fail **123.80** × **83.76** |
+| 603048 (6.0×30.0×48.0) | 850–950 | **PASS**† 99.80 × 64.96 | **PASS** 98.60 × 64.62 | fail **109.80** × 65.96 | fail **126.80** × **71.96** | fail **129.80** × 66.96 | fail **123.80** × **78.96** |
+| 603048max (6.3×30.5×50.0) | 850–950 | **PASS**† 99.80 × 65.46 | **PASS** 98.60 × 64.62 | fail **109.80** × 66.46 | fail **126.80** × **72.46** | fail **129.80** × 67.46 | fail **123.80** × **79.46** |
+| 503040 (5.0×30.0×40.0) | 520–620 | **PASS**† 98.53 × 64.96 | **PASS** 98.53 × 64.62 | **PASS**† 98.53 × 65.96 | fail **113.50** × **71.96** | fail **116.50** × 66.96 | fail **110.50** × **78.96** |
+| 503040max (5.5×30.5×42.0) | 520–620 | **PASS**† 99.80 × 65.46 | **PASS** 98.60 × 64.62 | fail **109.80** × 66.46 | fail **126.80** × **72.46** | fail **129.80** × 67.46 | fail **123.80** × **79.46** |
+
+How to read it: each cell shows **nominal L × W in mm** (T = 11.78 for all). **PASS** = every assert passes at the worst-case printed size. **†** = also all 82 collision pairs pass. "fail" shows the nominal size, with any nominal dimension over 100 or 70 mm in bold (the check itself uses the worst-case printed size, so a "fail" can show no bold number). Rows with "max" use the largest size some listing or datasheet quotes for that code, and "mAh in listings" comes from those listings: **all unverified**. The stick-on and ceramic antenna sizes are typical sizes from web search results, not Shopee.
+
+Sources for the cell sizes and capacities (web search, not Shopee): [603450 listings](https://besomi.com/ae_en/bcbx0175-lithium-polymer-battery-pack-37v-1000mah-rechargeable.html) (1000 / 1200 / 1500 mAh, some say 6.0 × 34.5 × 52 max), [503450](https://www.eemb.com/product-138) (EEMB bare cell 950 mAh, 34.5 × 52 × 5.3), [503040](https://www.digikey.dk/en/products/detail/jauch-quartz/LP503040JH-PCM-2-WIRES-50MM/13540153) (600 mAh, 30.5 × 42 × 5.4), [603048](https://www.eemb.com/product-146) (850–950 mAh).
+
+### Recommendation
+
+1. **Cell: 603450 (6.0 × 34 × 50), 1000–1200 mAh.** Same footprint as the 503450 but more capacity (1000–1500 mAh listings against 950–1200) and 1.98 mm of swelling room. Choose a listing that states a built-in protection circuit and a JST-PH plug.
+2. **Antenna: ceramic, as short as you can find (≤ 13 mm gives 1.2 mm of room, 15.0 mm is the hard limit).** It sits at mid-height on a printed frame, 24 mm from the foil.
+3. **Print version 1 (sharp) if you need more room**: it is 0.88 mm shorter (98.92 mm), because the rounded body keeps the bq25185 away from its 3 mm corner radius.
+4. **Before anything else, print the fit coupon** and run the Wi-Fi range test in section 7. The antenna sits 5 mm from metal, as you required, but that is geometry, not measured RF performance.
+
+### Parameters to change when you have real parts
+
+All are at the top of `powerbank70.scad`, in the section `PARTS YOU SWAP`. Change the numbers, run `openscad -o out.echo powerbank70.scad`, and the asserts name the dimension that fails. **The layout recomputes itself; nothing is moved by hand.**
+
+| Part | Parameters | Enter |
+|---|---|---|
+| Cell | `cell_code` (label), `cell_t`, `cell_w`, `cell_l`, `cell_lead_len`, `cell_tol_pct` | The listing's **maximum** thickness, width and length (the pocket adds 1.2 mm on length and width). `cell_lead_len` = wire length to the PH plug. Swelling is checked at `cell_t` × (1 + `cell_tol_pct`) |
+| Antenna | `ant_type` (`"ceramic"` or `"stick"`), `ant_l`, `ant_w`, `ant_t`, `ant_cable_len` | Body size. Cable length from the listing (must be ≥ the straight-line distance the assert reports) |
+| Slide switch | `sw_l`, `sw_w`, `sw_h`, `sw_handle`, `sw_handle_h`, `sw_travel`, `sw_pin_l` | Body length along the slide, body width, body height, handle width, handle height above the body, travel, pin length |
+| Button | `tact_w`, `tact_body_h`, `tact_h`, `tact_act_d` | `tact_h` = total height to the top of the plunger, **≤ 6.0** (assert) |
+| Model switches | `limits_at_worst_case`, `enforce_limits`, `style`, `plug_mode` | `limits_at_worst_case=false` checks nominal sizes only. `enforce_limits=false` shows the size of a layout that does not fit |
+
+To test many candidates at once, add lines to `CELLS` and `ANTENNAS` in `enclosure/tools/run_combos.sh` and run it. It prints the outer size and the first assert that fails. `run_combos.sh full` also runs the collision pairs for every combination that passes.
+
+### Shopping spec (what to search for on Shopee)
+
+**Use the all-at-once envelope**: every part at its limit together, tested with all 82 pairs (last row of the checks table). Cell **≤ 6.9 × 34.2 × 54.0 mm** · ceramic antenna **≤ 15.0 × 5.4 × 3.5 mm** · slide-switch body **≤ 8.8 × 6.0 mm**, pin + body + handle **≤ 10.7 mm** · button **≤ 6.0 mm** tall.
+
+The table also gives the larger limit each dimension has **on its own** (all other parts at default). Those larger limits share budgets, so they cannot all be used at once: **cell width + antenna width ≤ 39.8 mm** (fitted from 7 runs), and the switch height is one total. If a listing is outside the envelope but inside a single-part limit, put its numbers into the file and read the asserts.
+
+| Part | Size window that still fits | Connector | Protection / electrical |
+|---|---|---|---|
+| **LiPo cell** (1S, 3.7 V nominal, 4.2 V max) | Use the listing's **maximum** figures: **thickness ≤ 6.9 mm, width ≤ 34.2 mm (34.8 mm alone), length ≤ 54.0 mm**. Codes that fit: 603450 and 503450 (the 1000–1500 mAh class); 603048 (850–950 mAh) and 503040 (520–620 mAh) fit too but are below your range | **JST-PH 2.0 mm, 2-pin.** If it is XH, 1.25 mm or RCY, cut it off and solder on a PH pigtail (section 6.3). **Check polarity with a multimeter** before the first plug-in. **Leads ≥ 62.3 mm** (the model needs 61.7–62.2 mm); listings quote 50–150 mm, so a 50 mm lead needs a pigtail | **A built-in protection circuit (PCM) stated in the listing**: overcharge, over-discharge, over-current and short-circuit cut-offs. Seller pages for 603450 cells quote about 4.28 V, 2.5 V and 2.5–4 A, but those are not datasheets: get the real values from the seller. A bare cell with solder tabs does not qualify. The [bq25185 board](https://www.adafruit.com/product/6091) charges at **1 A by default** (cut its jumper for 500 or 250 mA), so with a 1000 mAh cell choose one rated for a 1C charge or cut the jumper. Prefer 2 wires: a 3rd wire is an NTC whose value you must measure |
+| **Ceramic antenna** (2.4 GHz, 50 Ω) | Body **length ≤ 15.0 mm (hard limit; ≤ 13 mm gives 1.2 mm of room), width ≤ 5.4 mm (5.8 mm alone), thickness ≤ 3.5 mm (3.77 mm alone)**. With a ≤ 48 mm × 30 mm cell (603048 class) width can be up to 9.8 mm | **U.FL, also sold as IPEX gen-1 or MHF1.** Seeed's wiki names the XIAO socket U.FL-R-SMT1. **Reject MHF4, IPEX 4 and W.FL**: they do not mate. Cable **≥ 10 mm** by the model's straight-line lower bound; a 50 mm pigtail is realistic. A 100 mm cable leaves about 70 mm of slack that has no modelled place | Efficiency and gain are not checked by the model. Only the range test decides |
+| **Stick-on antenna** | **Only with a 503040-class cell ≤ 41.25 mm long**: length ≤ 28.3 mm, width ≤ 9.8 mm (each on its own; the tested combination is 25 × 6 mm). Common flat antennas are 39–50 mm long and **do not fit** | U.FL, as above | As above |
+| **Slide switch** | Body **length ≤ 8.8 mm, width ≤ 6.0 mm (6.3 mm alone)**. Height: **pin length + body height + handle height ≤ 10.7 mm** in total (10.98 mm alone; the default is 3.5 + 3.5 + 3.0 = 10.0). Enter them as `sw_pin_l`, `sw_h`, `sw_handle_h` | Through-hole pins, soldered. No connector | Rating is not modelled. Pick one rated for the cell's current |
+| **Button** | **6 × 6 mm** tact, **total height to the top of the plunger ≤ 6.0 mm** (your rule; the file asserts it). Defaults: body 3.5 mm, plunger Ø 3.5 mm | Through-hole or SMD pins, soldered | None |
+| **JST-PH pigtail** (only if the cell plug is not PH) | n/a: it joins the cell leads | **PH 2.0 mm, 2-pin, pre-crimped. Wire AWG 24–30** (PH housings take no thicker wire), length ≥ 100 mm to trim | None |
+
+When you have Shopee links, send them. I will put the numbers into the `PARTS YOU SWAP` section, rerun the asserts and the collision pairs, and report pass or fail for each combination.
+
+### Layout (default build, seen from the front, body hidden)
+
+![compact layout](img/c70_layout.png)
+
+Colours: silver = cell, royal blue = bq25185 (USB-C on the bottom edge), purple = MAX17048, dark green = XIAO + expansion board, grey ring = camera, light cyan disc = window, black = slide switch, grey square = button, gold = antenna, cyan box = antenna keep-out, orange = plug zones, green = finger columns, red = reserved wire lanes.
+
+| Assembled | Exploded |
+|---|---|
+| ![assembled](img/c70_front.png) | ![exploded](img/c70_exploded.png) |
+
+### Files and checks for the compact version
+
+| File | What |
+|---|---|
+| `enclosure/powerbank70.scad` | The compact model, one standalone file (no includes). Swap-in parameters at the top. Built from the full model's modules |
+| `enclosure/tools/run_combos.sh` | Cell × antenna table (`full` adds the collision pairs) |
+| `enclosure/tools/run_checks.sh` | Asserts + pairs + part renders. `SCAD=powerbank70.scad enclosure/tools/run_checks.sh` for the compact model |
+| `enclosure/stl/c70_*.stl` | STLs for the default build: body v2 / v1, plug (removable and permanent), covers A / B / C, button cap, fit coupon |
+| `enclosure/check_results/c70_*.log` | One log per configuration (asserts, 82 pairs, part renders) |
+| `enclosure/check_results/c70_combos_table.txt` | Output of `run_combos.sh`: every cell × antenna combination, with the first failing assert |
+| `enclosure/check_results/c70_size_limits.txt` | Where the shopping-spec size windows come from: the largest value of each parameter that still passes, one at a time, others at default |
+
+**Checks run by me here (OpenSCAD 2021.01), on the final `powerbank70.scad`**
+
+| Configuration | Asserts | Collision pairs | Printable parts (7) |
+|---|---|---|---|
+| 603450 + ceramic 15×5, v2 rounded, removable plug (**default**) | PASS | **82 / 82** | one simple solid each |
+| 603450 + ceramic 15×5, v1 sharp, removable plug | PASS | **82 / 82** | one simple solid each |
+| 603450 + ceramic 15×5, v2 rounded, permanent plug | PASS | **82 / 82** | one simple solid each |
+| 603450 at listing max 6.0×34.5×52.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 503450 5.0×34.0×50.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 503450 at listing max 5.3×34.8×53.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 603048 6.0×30.0×48.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 603048 at max 6.3×30.5×50.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 503040 5.0×30.0×40.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 503040 at max 5.5×30.5×42.0 + ceramic 15×5 | PASS | **82 / 82** | one simple solid each |
+| 503040 5.0×30.0×40.0 + stick-on 25×6 | PASS | **82 / 82** | one simple solid each |
+| 603450 + ceramic 10×4 | PASS | **82 / 82** | one simple solid each |
+| **All-at-once envelope** (shopping spec): cell 6.9×34.2×54.0, ceramic 15.0×5.4×3.5, switch 8.8×6.0 with stack 10.7, button 6.0. Outer 99.80 × 69.66 × 11.78 (worst case 99.996 × 69.86 × 11.98) | PASS | **82 / 82** | one simple solid each |
+
+The 82 pairs are: body and plug against every part, lane and plug zone (0–26); part against part (27–47); the 5 mm antenna keep-out against every metal part, lane and zone (48–57); the 10 mm antenna-to-cell zone and the hot zones against the swollen cell (58–59); every finger-access column against the body, cell, boards, camera, switch, button, antenna and cap (60–69); every wire lane against the cell, boards, camera, switch and button (70–76); the plug zones against the boards, XIAO, camera and cell (77–81). The coupon is 3 volumes by design (2 solids). Logs: `enclosure/check_results/c70_*.log`.
+
+**Not verified for the compact version:** everything under "What is wrong with this layout" above, plus: the real cell, its connector, lead length and protection board; the camera head; the antenna's RF performance; the slide switch and button sizes (defaults come from the SS-12D00G3 drawing and a typical 6 × 6 tact switch); and thermal behaviour. **Fit is proven only against my dummies.**
+
+---
+
+## Full-capacity version (635085 cell, `powerbank.scad`)
+
 **Bottom line: 187.1 × 54.1 × 11.0 mm (version 2, rounded) or 187.0 × 54.1 × 11.0 mm (version 1, sharp), with JST-PH on every board connection and the antenna ≥ 5 mm from all metal.**
 - **Length is 1.8 mm shorter than the last round (188.9)**, because the plug zones now use the real JST-PH housing sizes. Thickness and width are unchanged.
 - **Your cell's connector: I could not check it.** You haven't bought the cell, and the one listing I have never confirmed a connector for me. If it turns out not to be JST-PH, the cheapest fix costs **0 mm**: cut its plug off and solder on a JST-PH pigtail. Keeping your red RCY plug as a splice costs **+5.0 mm** (on edge, 192.1 mm long) or **+7.7 mm** (flat, 194.8 mm). Details are in [section 6](#6-connectors-cell-jst-ph-and-the-red-rcy-pairs).
@@ -242,7 +371,7 @@ Rule: a printed pocket around a bought part gets **0.10 per side**. With the poc
 
 The plug seam at the two ends can be up to 1.2 mm wide in the worst case. That is the ±0.3 % rule on 185 mm. Parts from one print job usually scale together, so expect less. Fill it with epoxy and sand flush.
 
-**Fit coupon** (`part="coupon"`, 82 × 95 × 4.3). Each row is the real recess at **0.10 / 0.15 / 0.20 / 0.25** per side, with the number engraved:
+**Fit coupon** (`part="coupon"`, 97 × 95.5 × 7.3; the earlier text said 82 × 95 × 4.3, which did not match the STL). Each row is the real recess at **0.10 / 0.15 / 0.20 / 0.25** per side, with the number engraved:
 - camera pocket
 - switch pocket with slot
 - tact pocket

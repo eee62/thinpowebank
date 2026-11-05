@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs every check on powerbank.scad and prints a summary.
+# Runs every check on the model in $SCAD (default powerbank.scad; SCAD=powerbank70.scad for the compact model) and prints a summary.
 #   1. assert()/echo pass for each configuration (any ERROR or WARNING fails)
 #   2. every "must not touch" pair in debug_pairs: the intersection must be empty
 #      (or have < 0.001 mm^3 volume = only a touching face)
@@ -7,7 +7,7 @@
 # Usage: tools/run_checks.sh [extra -D overrides...]   e.g.  tools/run_checks.sh -D 'style="sharp"'
 set -u
 cd "$(dirname "$0")/.."
-SCAD=powerbank.scad
+SCAD=${SCAD:-powerbank.scad}
 OUT=${CHECK_OUT:-/tmp/powerbank_checks}; mkdir -p "$OUT"
 EXTRA=("$@")
 JOBS=${JOBS:-4}

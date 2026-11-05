@@ -1,0 +1,29 @@
+reference: 603450-class cell + ceramic antenna; each value = LARGEST that still passes all asserts, others at reference
+cell_l       max 54.06
+cell_w       max 34.82
+cell_t       max 6.94
+ant_l        max 15
+ant_w        max 5.82
+ant_t        max 3.77
+sw_l         max 8.8
+sw_w         max 6.33
+sw_h         max 4.49
+sw_handle_h  max 3.98
+tact_h       max 5.97
+sw_pin_l     max 4.49
+tact_body_h  max 5.86
+--- with a smaller cell (503040 class 5x30x40): ant_l / ant_w limits
+ant_l        max 28.3
+ant_w        max 9.8
+--- 603048 class (6x30x48)
+ant_l        max 15
+ant_w        max 9.8
+cell_l       max 54.05
+
+--- stick-on antenna limits with a 503040-class cell
+503040 nominal + stick 25x6: max cell_l 41.25
+503040 nominal + stick 25x6: max cell_w 33.81
+503040 nominal + stick 25x6: max ant_l  28.28
+503040 nominal + stick 25x6: max ant_w  9.83
+503040 nominal + stick (l=20,w=6): max cell_l 41.25
+503040max(5.5x30.5x42) + stick: max ant_l 14.99
