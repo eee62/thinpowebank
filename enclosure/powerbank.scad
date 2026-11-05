@@ -16,7 +16,8 @@
 //                   Z = T is the FRONT face (lens, power switch, button).
 //
 //  PARTS (one module each):  body()  plug()  usb_cover(fit)  button_cap()  fit_coupon()
-//  VIEWS:  assembled, exploded, section, debug (pairwise intersections; each must be empty)
+//  VIEWS:  assembled, exploded, section, layout (zones + keep-out), debug (pairwise intersections; each must be empty)
+//  SWITCHES worth knowing: cell_connector ("PH" | "RCY" splice), antenna_place, plug_mode, board_connectors, cell_vents
 // =============================================================================
 
 /* [What to render] */
@@ -38,8 +39,15 @@ antenna_place = "bay";
 board_connectors = "kept";
 // convection slots in the long side walls next to the charger and the XIAO
 vents = true;
+// pressure-relief slots in both long walls beside the cell: a sealed rigid case has no relief for a swelling pouch
+cell_vents = true;
 // draw the reserved wire lanes in assembled/section views
 show_lanes = false;
+// cell connector: "PH" = JST-PH plug on the cell (mates the MAX17048 JST-PH header directly)
+//                 "RCY" = red JST-RCY plug on the cell: a mated RCY pair (splice) is reserved in the lead zone
+cell_connector = "PH";
+// RCY splice orientation: "edge" = stands on edge (6.7 tall x 4.0 thick), "flat" = lies flat (4.0 tall x 6.7)
+rcy_orient = "edge";
 // debug: -1 = union of all pair intersections; n = only pair n (see debug_pairs)
 debug_pair = -1;
 // exploded-view spacing
@@ -142,8 +150,24 @@ mx_holes = [[2.54, 2.54], [22.86, 2.54], [2.54, 17.78], [22.86, 17.78]]; // 4 ho
 mx_hole_d = 2.5;
 mx_gap   = 1.0;
 
-jst_plug_zone = 8.0;     // room in front of a JST-PH header for the mated plug + wire bend. ASSUMED
-qt_plug_zone  = 6.0;     // same for STEMMA QT
+// --- REAL JST-PH sizes (JST PH catalogue, ePH.pdf; see README section 2) ---
+ph_hsg_w   = 5.8;   // PHR-2 housing width across the contacts (B = 5.8)
+ph_hsg_t   = 4.5;   // PHR-2 housing thickness
+ph_hsg_len = 6.35;  // PHR-2 housing length along the mating axis
+ph_hdr_len = 6.0;   // S2B-PH-SM4-TB side-entry header body depth (+2.6 solder tab behind it)
+ph_hdr_w   = 7.9;   // header width, 2 circuits
+ph_hdr_h   = 5.5;   // header height above the PCB
+ph_out     = 2.0;   // housing protrusion when mated: JST gives 8.0 mm mated height on a 6.0 mm header
+ph_wire_od = 1.2;   // SPH-002T-P0.5S takes AWG 24-30, O.D. 0.8-1.5 mm: 1.2 assumed (26 AWG)
+ph_bend_r  = 4 * ph_wire_od;   // minimum wire bend radius, ASSUMED 4 x O.D.
+ph_straight = 2.0;  // straight wire run out of the housing before any bend (strain relief)
+ph_mouth_bq = 0.48; // header mouth inset from the board edge on the bq25185 (Adafruit STEP)
+ph_mouth_mx = 0.26; // same on the MAX17048
+jst_plug_zone = ph_hsg_len + ph_straight;   // legacy name: used by front-port mode and layout_studies.scad
+qt_plug_zone  = 6.0;     // STEMMA QT (JST-SH) plug + cable, unchanged, ASSUMED
+
+// --- JST-RCY splice (only when cell_connector = "RCY"): JST RCY sheet: mated 23.3 long x 4.0 thick, housing 6.7 wide
+rcy_l = 23.3;  rcy_w = 6.7;  rcy_t = 4.0;
 
 // =============================================================================
 //  CAMERA HEAD. Defaults = Seeed OV5640 AF spec (MJY5OAF-F3M-V1):
@@ -196,8 +220,10 @@ tact_cradle_wall = 0.8;
 // =============================================================================
 ant_l = 39;  ant_w = 19;  ant_t = 0.2;  ant_clr = 0.5;  ant_frame_h = 0.4;  ant_frame_w = 0.6;
 ant_keep = 5.0;      // RULE: antenna >= 5 mm from cell foil and any other metal (plastic is allowed inside)
-fence_t  = 0.8;      // plastic fences at both ends of the antenna bay (stop wires sagging in)
-shelf_t  = 0.8;      // wire shelf that carries the cross-bay wires >= ant_keep above the antenna
+fence_t  = 0.8;      // plastic fences at both ends of the antenna bay; they carry the antenna frame
+ant_wall_gap = 3.0;  // Seeed staff: do not stick the FPC antenna flat on the case, leave 3-5 mm to the plastic
+ant_rim  = 1.5;      // adhesive rim of the carrier frame (the radiating area is over an open window)
+carrier_t = 0.8;     // carrier frame thickness
 finger_clr = 3.0;    // RULE: finger/tweezer room each side of every mated plug, open to the back
 
 // =============================================================================
@@ -211,7 +237,7 @@ laneB_w = qt_plug_zone;                          // between MAX and XIAO: QT plu
 laneC_w = wire_sig_d + lane_spare + 0.2;         // button wires along the +Y wall = 2.0
 ribbon_bay = 6.0;   // minimum X gap row1/row2, S-folds the spare ribbon
 heat_gap   = 3.0;   // air gap between electronics and the cell lead zone when there is no antenna bay
-shelf_w = 2*wire_pwr_d + 2*ntc_wire_d + lane_spare;   // cross-bay wires: cell leads + NTC (+1 mm spare)
+lead_lane_w = wire_pwr_d + 2*ntc_wire_d + lane_spare;  // cell-lead + NTC bundle, leads stacked vertically: 1.2 + 2 x 0.5 (side by side) + 1 spare
 
 // =============================================================================
 //  USB-C PORT WELL AND COVER
@@ -318,6 +344,9 @@ Wi = max(cell_pocket_w,
          y_sp0 + max(sp_w_need, cam_ring_od + laneC_w + 0.3) - y0);
 W  = Wi + 2*wall;
 y_hi = y0 + Wi;        // inner face of the +Y wall
+// antenna: pushed to the -Y wall so the +Y side stays free for the cell-lead lane
+y_ant0  = y0 + ant_wall_gap;
+y_lane0 = y_ant0 + ant_l + ant_keep;      // start of the +Y wire lane (outside the 5 mm keep-out)
 
 // =============================================================================
 //  DERIVED: X (length)
@@ -328,8 +357,18 @@ sp_margin = max(0.5, corner_keep);
 sp_x0 = wall + sp_margin;
 sp_len = max(sw_cradle[0], has_button ? tact_cradle : 0) + 0.6 + cam_ring_od + 0.3;
 row1_end = max(charge_port == "edge" ? x_row1 + bq_d : x_row1 + bq_edge_th, sp_x0 + sp_len);
-// row gap: bq25185 plug zone + MAX17048 plug zone in series (they face each other)
-gap12 = kept ? (charge_port == "edge" ? 2 : 1) * jst_plug_zone : max(ribbon_bay, 3.0);
+// row gap: set by the real JST-PH housings of the bq25185 and MAX17048, which face each other
+function s_bend(d, r) = d >= 2*r ? 2*r : 2*sqrt(r*d - d*d/4);   // axial length of an S-bend of radius r that shifts a wire sideways by d
+bq_jst_c = [for (j = bq_jst) (j[0] + j[1])/2];
+mx_jst_c = [for (j = mx_jst) (j[0] + j[1])/2];
+jump_d = abs(bq_jst_c[0] - mx_jst_c[0]);                          // BATT <-> MAX JST #1 are this far out of line across Y
+ph_gap_mouth = max(2*ph_hsg_len,                                  // both housings fully withdrawn, no overlap
+                   2*ph_out + 2*ph_straight + s_bend(jump_d, ph_bend_r),   // jumper S-bend with both mated
+                   ph_hsg_len + ph_straight + ph_bend_r + ph_out);         // cell lead leaves its withdrawn housing and bends 90 deg
+x_bq_mouth = x_row1 + bq_d - ph_mouth_bq;                         // bq JST mouth plane (edge mode)
+gap12 = kept ? (charge_port == "edge" ? max(ph_gap_mouth + (x_bq_mouth - row1_end) - clr_board - ph_mouth_mx, ribbon_bay)
+                                       : jst_plug_zone)
+             : max(ribbon_bay, 3.0);
 x_row2 = row1_end + gap12;
 x_mx0 = x_row2 + clr_board;                             // MAX JST edge, mouths face -X into the gap
 Xx0 = x_row2 + xiao_usb_over + clr_board;               // XIAO PCB USB-end edge
@@ -341,7 +380,10 @@ x_bay = row2_metal;                                     // antenna keep-out star
 bay_len = antenna_place == "bay" ? 2*ant_keep + ant_w : heat_gap;
 x_ant0 = x_bay + ant_keep;                              // antenna sticker edge
 x_head = x_bay + bay_len;                               // lead zone: metal allowed again from here
-x_cell = x_head + cell_head_zone;
+rcy_foot_x = rcy_orient == "edge" ? rcy_t : rcy_w;       // splice footprint across the lead zone (X)
+rcy_h      = rcy_orient == "edge" ? rcy_w : rcy_t;       // splice height (Z)
+lead_zone  = cell_connector == "RCY" ? max(cell_head_zone, rcy_foot_x + 2*finger_clr) : cell_head_zone;
+x_cell = x_head + lead_zone;
 L  = x_cell + cell_pocket_l + wall;
 Li = L - 2*wall;
 
@@ -360,11 +402,14 @@ cell_cy = y_cellb + cell_w/2;
 usb_y = y_bq0 + (bq_usb[0] + bq_usb[1])/2;
 usb_z = Zbq + (bq_usb[4] + bq_usb[5])/2;
 usb_x_front = x_row1 + (bq_usb[4] + bq_usb[5])/2;      // front mode: centre in X
-// partition tunnel in front of the MAX JST that takes the cell lead
-y_ant0 = y0 + (Wi - ant_l)/2;                          // antenna centred across the width
-Zsh = Zi0 + ant_t + ant_keep;                           // top of the wire shelf = keep-out ceiling
-// cell lead length needed to reach the MAX JST nearest the cell side (path over the shelf, over the MAX)
-cell_lead_need = (x_cellb - x_mx0) + (Zsh - Zc) + 12;
+Zab = (Zi0 + Zw)/2 - ant_t/2;                           // antenna bottom: centred between the plug and the front wall
+// cell-lead route: lead zone -> +Y lane across the bay -> lane A beside the XIAO -> row gap -> MAX JST #2 (Y = y_mx0 + mx_jst_c[1])
+lane_y = y_hi - 1.5;
+cell_lead_need = abs(x_cellb - (x_row2 + ph_mouth_mx)) + abs(lane_y - cell_cy) + abs(lane_y - (y_mx0 + mx_jst_c[1]))
+                 + 2*(ph_out + ph_straight) + 10;
+// RCY splice position (lead zone, along Y, starting just beside the cell's lead exit)
+y_s0 = cell_cy - 3.7;
+x_s  = x_head + lead_zone/2;
 // bq standing on edge (front mode): bottom edge height
 Zbq_edge0 = Zi0 + (kept ? jst_plug_zone : clr_board);
 
@@ -404,6 +449,11 @@ assert(!has_button || (Zw - btn_flange_t - btn_free) - (Ztt + btn_gap) >= -eps, 
 assert((sw_handle + 2*tol_hole) - 2*tol_hole >= sw_handle - eps, "switch slot worst case narrower than the handle");
 assert(usb_z - usb_well_h/2 - Zi0 >= 0.8 || charge_port == "front", "web under the USB well < 0.8");
 assert(gap12 >= ribbon_bay, "row gap too small for the ribbon S-fold");
+assert(antenna_place != "bay" || Zab - Zi0 >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the plug");
+assert(antenna_place != "bay" || Zw - (Zab + ant_t) >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the front wall");
+assert(antenna_place != "bay" || y_hi - y_lane0 - ledge_d >= lead_lane_w - eps, "+Y lane across the antenna bay too narrow for the cell leads + NTC");
+assert(laneA_w >= wire_pwr_d + lane_spare - eps, "lane A too narrow for the stacked cell leads");
+assert(ph_gap_mouth >= 2*ph_hsg_len - eps, "row gap shorter than both JST-PH housings fully withdrawn");
 assert(antenna_place != "bay" || ant_l + 2*ant_clr + 2*ant_frame_w <= Wi, "antenna longer than the body is wide");
 assert(Wi >= cell_pocket_w, "interior narrower than the cell pocket");
 assert(cam_y - cam_ring_od/2 >= y_sp0 - eps && cam_y + cam_ring_od/2 <= y_hi - laneC_w + eps, "camera bezel does not fit in the small-parts column");
@@ -418,8 +468,11 @@ echo(str("Thickness drivers (interior heights): XIAO ", H_xiao, " cell ", H_cell
          " camera ", H_cam, " tact ", H_tact, " switch ", H_sw, " front-port ", H_front, " -> Hi = ", Hi));
 echo(str("Layout X: row1 ", x_row1, "..", row1_end, "  gap ", gap12, "  row2 ", x_row2, "..", row2_end,
          "  antenna bay ", x_bay, "..", x_head, "  lead zone ..", x_cell, "  cell pocket ", x_cell, "..", x_cell + cell_pocket_l));
-echo(str("Antenna: sticker X ", x_ant0, "..", x_ant0 + ant_w, ", keep-out ", ant_keep, " mm; gap to cell foil ", x_cellb - (x_ant0 + ant_w),
-         " mm; cell leads must reach ", cell_lead_need, " mm (else a JST-PH extension)"));
+echo(str("Antenna: X ", x_ant0, "..", x_ant0 + ant_w, " Y ", y_ant0, "..", y_ant0 + ant_l, " Z ", Zab, "; keep-out ", ant_keep, " mm; gap to cell foil ",
+         x_cellb - (x_ant0 + ant_w), " mm; to plug ", Zab - Zi0, " mm; to front wall ", Zw - (Zab + ant_t), " mm"));
+echo(str("JST-PH row gap: mouth-to-mouth ", ph_gap_mouth, " (jumper offset ", jump_d, ", S-bend ", s_bend(jump_d, ph_bend_r), ") -> gap12 ", gap12));
+echo(str("Cell leads must reach about ", cell_lead_need, " mm along the lane route (else a JST-PH extension). Lead zone ", lead_zone,
+         " mm (", cell_connector, cell_connector == "RCY" ? str(", splice ", rcy_orient, " ", rcy_foot_x, " x ", rcy_l, " x ", rcy_h) : "", ")"));
 echo(str("Rounded-corner growth at cell corners: ", cell_g, " mm per side; corner keep-out ", corner_keep));
 echo(str("Lens: opening r_in ", lens_r_in, " (needs ", lens_r_req_in, "), r_out ", lens_r_out, ", lens-disc gap ", cam_gap_disc, ", max FOV ", fov_max));
 echo(str("Plug fit per side: X ", plug_fx, "  Y ", plug_fy));
@@ -473,7 +526,7 @@ module body() {
 }
 
 module internal_features() {
-    if (antenna_place == "bay") bay_fences_and_shelf();
+    if (antenna_place == "bay") bay_carrier();
     if (charge_port == "edge") usb_boss_edge(); else { usb_boss_front(); bq_edge_guides(); }
     if (charge_port == "edge") board_posts("bq", 3.6, Zbq + bq_pcb_t, Zbq);
     board_posts("mx", 3.4, Zmx + mx_pcb_t, Zmx);
@@ -485,15 +538,17 @@ module internal_features() {
     ledges();
 }
 
-// --- antenna bay: two low plastic fences (plug side up to the keep-out ceiling) and a wire shelf
-//     along the -Y wall whose top is ant_keep above the antenna. Wires cross the bay ON the shelf.
-//     Everything here is plastic, which is allowed inside the 5 mm keep-out.
-module bay_fences_and_shelf() {
+// --- antenna bay: two full-height plastic fences carry a plastic FRAME at mid-height. The antenna's
+//     adhesive back sticks to the 1.5 mm rim, so the radiating area hangs over an open window, >= ant_wall_gap
+//     from the front wall and from the plug (Seeed staff advice). Everything here is plastic.
+//     The wire lane is on the +Y side, outside the 5 mm keep-out, so no wire crosses the antenna.
+module bay_carrier() {
     for (x = [x_bay + 0.2, x_head - fence_t])
-        bx([x, y0 - eps, Zi0], [x + fence_t, y_hi + eps, Zsh]);
-    bx([x_bay + 0.2, y0 - eps, Zsh - shelf_t], [x_head, y0 + shelf_w + 0.8, Zsh]);
-    // lip on the shelf edge so wires cannot roll off toward the antenna
-    bx([x_bay + 0.2, y0 + shelf_w, Zsh - shelf_t], [x_head, y0 + shelf_w + 0.8, Zsh + 1.2]);
+        bx([x, y0 - eps, Zi0], [x + fence_t, y_lane0, Zw + eps]);
+    translate([0, 0, Zab - carrier_t]) linear_extrude(carrier_t) difference() {
+        translate([x_bay + 0.2, y0 - eps]) square([x_head - x_bay - 0.2, y_lane0 - y0 + eps]);
+        translate([x_ant0 + ant_rim, y_ant0 + ant_rim]) square([ant_w - 2*ant_rim, ant_l - 2*ant_rim]);
+    }
 }
 
 // --- thick end wall around the charging port (edge mode) ---
@@ -541,7 +596,7 @@ module xiao_posts() {
                [13.352 + fit_slide_bought, 13.352 + fit_slide_bought + 1.6]])
         bx([Xx0 - 0.1 - xpost, xy_v(vv[1]), zb], [Xx0 - 0.1, xy_v(vv[0]), Zw + eps]);
     // far end: past the expansion board envelope
-    for (vv = [[2.0, 3.6], [14.18, 15.78]])
+    for (vv = [[3.2, 4.8], [14.18, 15.78]])     // first post kept >= 0.6 mm from the +Y lane (Y >= y_lane0)
         bx([xiao_far + 0.1, xy_v(vv[1]), zb], [xiao_far + 0.1 + xpost, xy_v(vv[0]), Zw + eps]);
 }
 
@@ -638,6 +693,14 @@ module body_cuts() {
         for (x = [x_row2 + 4 : vent_pitch : row2_end - 4])
             translate([x, W - wall - 1, vz]) cube([vent_w, wall + 2, vent_h]);
     }
+    // relief slots beside the cell (gas and swelling pressure path; they do not give the cell more thickness)
+    if (cell_vents) {
+        vz = T/2 - vent_h/2;
+        for (x = [x_cell + 12 : 18 : x_cell + cell_pocket_l - 12]) {
+            translate([x, -1, vz]) cube([vent_w, wall + 2, vent_h]);
+            translate([x, W - wall - 1, vz]) cube([vent_w, wall + 2, vent_h]);
+        }
+    }
     // removable plug: pry notch in the wall rim is NOT used (wall is min thickness); the notch is in the plug
 }
 
@@ -693,12 +756,6 @@ module plug_features() {
     // front-mode: pads under the standing bq board corners
     if (charge_port == "front") for (yy = [y_bq0 + 1, y_bq0 + bq_l - 1])
         cbox([x_row1 + bq_pcb_t/2, yy, Zi0 - eps], [bq_pcb_t, 1.5, Zbq_edge0 - pad_float - Zi0 + eps]);
-    // antenna locating frame (bay)
-    if (antenna_place == "bay") translate([0, 0, Zi0 - eps]) linear_extrude(ant_frame_h + eps) difference() {
-        translate([x_ant0 - ant_clr - ant_frame_w, y_ant0 - ant_clr - ant_frame_w])
-            square([ant_w + 2*ant_clr + 2*ant_frame_w, ant_l + 2*ant_clr + 2*ant_frame_w]);
-        translate([x_ant0 - ant_clr, y_ant0 - ant_clr]) square([ant_w + 2*ant_clr, ant_l + 2*ant_clr]);
-    }
 }
 
 // =============================================================================
@@ -818,24 +875,24 @@ module tact_dummy() if (has_button) {
     translate([tact_x, tact_y, Ztb + tact_body_h - eps]) cylinder(d = tact_act_d, h = tact_h - tact_body_h + eps);
     for (sx = [-1, 1], sy = [-1, 1]) cbox([tact_x + sx*3.25, tact_y + sy*2.25, Ztb - (tact_leg_clear - 0.2)], [0.7, 0.3, tact_leg_clear - 0.2 + eps]);
 }
-module antenna_dummy() if (antenna_place == "bay") translate([x_ant0, y_ant0, Zi0]) cube([ant_w, ant_l, ant_t]);
+module antenna_dummy() if (antenna_place == "bay") translate([x_ant0, y_ant0, Zab]) cube([ant_w, ant_l, ant_t]);
 
 // RULE 2: no metal within ant_keep of the antenna (box = conservative envelope; plastic is allowed)
 module antenna_keepout() if (antenna_place == "bay")
-    bx([x_ant0 - ant_keep, max(y0, y_ant0 - ant_keep), Zi0], [x_ant0 + ant_w + ant_keep, min(y_hi, y_ant0 + ant_l + ant_keep), Zsh]);
+    bx([x_ant0 - ant_keep, max(y0, y_ant0 - ant_keep), Zi0], [x_ant0 + ant_w + ant_keep, min(y_hi, y_lane0), Zw]);   // full height
 
 // keep-out volumes for mated JST-PH / STEMMA QT plugs and their wire bends
 // each entry: [box min, box max, mating axis 0 = X / 1 = Y]
 function zone_list() = kept ? concat(
     charge_port == "edge"
-      ? [for (j = bq_jst) [[x_row1 + bq_d + eps, y_bq0 + j[0] - 0.5, Zbq + bq_pcb_t],
-                           [x_row1 + bq_d + jst_plug_zone, y_bq0 + j[1] + 0.5, Zbq + bq_pcb_t + bq_jst_h + 0.3], 0]]
+      ? [for (c = bq_jst_c) [[x_bq_mouth + eps, y_bq0 + c - ph_hsg_w/2, Zbq + bq_pcb_t],       // housing swept from mated to fully withdrawn
+                             [x_bq_mouth + ph_hsg_len, y_bq0 + c + ph_hsg_w/2, Zbq + bq_pcb_t + bq_jst_h + 0.3], 0, "bq"]]
       : [for (j = bq_jst) [[x_row1 + bq_pcb_t, y_bq0 + j[0] - 0.5, Zi0 + eps],
-                           [x_row1 + bq_pcb_t + bq_jst_h + 0.3, y_bq0 + j[1] + 0.5, Zbq_edge0 - eps], 2]],
-    [for (j = mx_jst) [[x_mx0 - jst_plug_zone + eps, y_mx0 + j[0] - 0.5, Zmx + mx_pcb_t],
-                       [x_mx0 - eps, y_mx0 + j[1] + 0.5, Zmx + mx_pcb_t + mx_jst_h + 0.3], 0]],
+                           [x_row1 + bq_pcb_t + bq_jst_h + 0.3, y_bq0 + j[1] + 0.5, Zbq_edge0 - eps], 2, "bqf"]],
+    [for (c = mx_jst_c) [[x_mx0 + ph_mouth_mx - ph_hsg_len, y_mx0 + c - ph_hsg_w/2, Zmx + mx_pcb_t],
+                         [x_mx0 + ph_mouth_mx - eps, y_mx0 + c + ph_hsg_w/2, Zmx + mx_pcb_t + mx_jst_h + 0.3], 0, "mx"]],
     [[[x_mx0 + mx_d - mx_qt_y[1] - 0.5, y_mx0 + mx_l + eps, Zmx + mx_pcb_t],
-      [x_mx0 + mx_d - mx_qt_y[0] + 0.5, y_mx0 + mx_l + qt_plug_zone - 0.2, Zmx + mx_pcb_t + mx_qt_h + 0.5], 1]]) : [];
+      [x_mx0 + mx_d - mx_qt_y[0] + 0.5, y_mx0 + mx_l + qt_plug_zone - 0.2, Zmx + mx_pcb_t + mx_qt_h + 0.5], 1, "qt"]]) : [];
 module plug_zones() for (z = zone_list()) bx(z[0], z[1]);
 
 // RULE 1: every plug can be pulled from the back opening without moving anything else:
@@ -844,38 +901,53 @@ module plug_zones() for (z = zone_list()) bx(z[0], z[1]);
 module access_zones() {
     for (z = zone_list()) {
         a = z[2];
-        bx([z[0][0] - (a == 1 ? finger_clr : 0), z[0][1] - (a == 0 ? finger_clr : 0), Zi0 + eps],
-           [z[1][0] + (a == 1 ? finger_clr : 0), z[1][1] + (a == 0 ? finger_clr : 0), z[1][2]]);
+        // fingers come from below, so the column stops at the board edge: the 0.3-0.5 mm of housing zone above the PCB is reached from beside it
+        x0 = z[3] == "bq" ? max(z[0][0], x_row1 + bq_d + eps) : z[0][0];
+        x1 = z[3] == "mx" ? min(z[1][0], x_mx0 - eps) : z[1][0];
+        bx([x0 - (a == 1 ? finger_clr : 0), z[0][1] - (a == 0 ? finger_clr : 0), Zi0 + eps],
+           [x1 + (a == 1 ? finger_clr : 0), z[1][1] + (a == 0 ? finger_clr : 0), z[1][2]]);
     }
     bx([Xx0 + 15.125, xy_v(17.021), Zi0 + eps], [Xx0 + 21.125, xy_v(0.821), Zxb - 7.43 - eps]);
+    if (cell_connector == "RCY") splice_zone(true);
 }
 
-// reserved wire lanes (must stay free of printed material). Wires are metal: none may enter the antenna keep-out.
+// --- RCY splice (red JST-RCY pair, mated: 23.3 x 6.7 x 4.0), only for cell_connector = "RCY"
+module splice_dummy() if (cell_connector == "RCY")
+    translate([x_s - rcy_foot_x/2, y_s0, Zi0 + 0.2]) cube([rcy_foot_x, rcy_l, rcy_h]);
+module splice_zone(access = true) if (cell_connector == "RCY")
+    bx([x_s - rcy_foot_x/2 - (access ? finger_clr : 0), y_s0, Zi0 + eps],
+       [x_s + rcy_foot_x/2 + (access ? finger_clr : 0), y_s0 + rcy_l, Zi0 + 0.2 + rcy_h]);
+
+// reserved wire lanes (must stay free of printed material AND of boards/parts: pairs 67-73). Wires are metal:
+// none may enter the antenna keep-out. Cell leads + NTC take this route to the MAX17048 (checked as free volumes,
+// NOT simulated as flexible cables): lead zone -> +Y lane across the bay -> lane A beside the XIAO -> row gap.
 module lanes() {
-    zt = Zw - eps;
-    // lead zone between the antenna bay and the cell (cell leads, NTC), between the cell stops
-    bx([x_head + eps, y_cellb + 3.6, Zi0 + eps], [x_cell - 1.0 - eps, y_cellb + cell_w - 3.6, zt]);
-    // across the antenna bay: on the wire shelf, ant_keep above the antenna (cell leads + NTC)
-    if (antenna_place == "bay")
-        bx([x_bay + 0.2 + eps, y0 + eps, Zsh + eps], [x_head - eps, y0 + shelf_w - eps, zt]);
-    else
-        bx([x_bay + eps, y0 + ledge_d + eps, Zi0 + ledge_h + eps], [x_head - eps, y_hi - ledge_d - eps, zt]);
-    // over the MAX17048 (between its posts, past its JST/QT): shelf -> row gap
-    bx([x_mx0 + mx_d - mx_jst_y[0] + 0.5, y_mx0 + 4.5, Zmx + mx_pcb_t + mx_low[4] + eps], [x_bay - eps, y_mx0 + 20.2, zt]);
-    // lane B (MAX <-> XIAO): QT cable, XIAO castellation wires
+    zt = Zw - eps;  zl = Zi0 + ledge_h + eps;  yl = y_hi - ledge_d - eps;
+    // lead zone: central part between the cell stops, then the +Y strip (clear of the +Y stop post)
+    difference() {
+        union() {
+            bx([x_head + eps, y_cellb + 3.6, zl], [x_cell - 1.0 - eps, y_cellb + cell_w - 3.6, zt]);
+            bx([x_head + eps, y_cellb + cell_w - 3.6, zl], [x_cell - 2.5 - 0.2, yl, zt]);
+        }
+        splice_zone(false);
+    }
+    // across the bay on the +Y side, outside the keep-out
+    if (antenna_place == "bay") bx([x_bay + eps, y_lane0 + eps, zl], [x_head - eps, yl, zt]);
+    else bx([x_bay + eps, y0 + ledge_d + eps, zl], [x_head - eps, yl, zt]);
+    // lane A beside the XIAO (+Y wall): cell leads (stacked) + XIAO castellation wires
+    bx([x_row2 + eps, Yx0 + xiao_pcb_w + eps, zl], [x_bay - eps, yl, zt]);
+    // lane B (MAX <-> XIAO): QT cable, XIAO castellation wires, NTC
     bx([x_row2 + eps, y_mx0 + mx_l + eps, Zi0 + eps], [x_bay - eps, Yx0 - eps, zt]);
-    // lane A (+Y wall beside the XIAO): castellation wires
-    bx([x_row2 + eps, Yx0 + xiao_pcb_w + eps, Zi0 + eps], [x_bay - eps, y_hi - eps, zt]);
-    // row gap (both plug zones, ribbon S-fold, wires crossing)
+    // row gap (both plug zones, jumper S-bend, cell-lead bend, ribbon S-fold)
     bx([row1_end + eps, y0 + eps, Zi0 + eps], [Xx0 - xiao_usb_over - eps, y_hi - eps, zt]);
-    // camera ribbon: under the flipped XIAO stack, and from the gap into the camera port
+    // camera ribbon: under the flipped XIAO stack, and from the gap into the camera port (starts past the ribbon stub)
     bx([Xx0 - xiao_usb_over, xy_v(xiao_ribbon_v) - 3.5, Zi0 + eps], [Xx0 + 15.1, xy_v(xiao_ribbon_v) + 3.5, Zxs - eps]);
-    bx([cam_x + cam_pocket/2 + eps, cam_y - 3.5, Zcam0 + eps], [row1_end + 1, cam_y + 3.5, Zplate_bot - cam_cradle_depth - eps]);
+    bx([cam_x + cam_w/2 + 3.0 + eps, cam_y - 3.5, Zcam0 + eps], [row1_end + 1, cam_y + 3.5, Zplate_bot - cam_cradle_depth - eps]);
     // lane C (+Y wall of the small-parts column): button wires
     if (has_button) bx([tact_x + tact_cradle/2 + eps, y_hi - laneC_w + eps, Zi0 + eps], [row1_end + eps, y_hi - eps, zt]);
-    // over the bq25185 (NTC to TH pad, switch to LOAD pads)
+    // over the bq25185 (NTC to TH pad, switch to LOAD pads): past the USB-C shell, above the low parts
     if (charge_port == "edge")
-        bx([x_row1 + 4.5, y_bq0 + 4.6, Zbq + bq_pcb_t + bq_low[4] + eps], [x_row1 + 15.5, y_bq0 + bq_l - 4.6, zt]);
+        bx([x_row1 + bq_d - bq_usb[2] + 0.2, y_bq0 + 4.6, Zbq + bq_pcb_t + bq_low[4] + eps], [x_row1 + 15.5, y_bq0 + bq_l - 4.6, zt]);
     // NTC channel under the cell, between the rails
     bx([x_cell + eps, cell_cy - 1.0, Zi0 + eps], [x_cellb + ntc_from_lead_end - ntc_l/2 - 0.4 - 0.4, cell_cy + 1.0, Zc - eps]);
 }
@@ -941,6 +1013,7 @@ module components() {
     color("black") switch_dummy();
     color("gray") tact_dummy();
     color("gold") antenna_dummy();
+    color("red") splice_dummy();
 }
 module assembled(ex = 0) {
     color("white", 0.35) translate([0, 0, ex * 2.5]) body();
@@ -972,7 +1045,12 @@ debug_pairs = [
     ["antenna_keepout", "lanes"], ["antenna_keepout", "plug_zones"],
     // --- RULE 1: finger/cable access columns (plug removed) against everything else (pairs 57-66)
     ["access", "body"], ["access", "cell"], ["access", "xiao"], ["access", "bq"], ["access", "max"],
-    ["access", "camera"], ["access", "switch"], ["access", "tact"], ["access", "antenna"], ["access", "button_cap"]
+    ["access", "camera"], ["access", "switch"], ["access", "tact"], ["access", "antenna"], ["access", "button_cap"],
+    // --- wire lanes against every component (pairs 67-73): a lane must be free of boards and parts, not only of printed walls
+    ["lanes", "cell"], ["lanes", "xiao"], ["lanes", "bq"], ["lanes", "max"], ["lanes", "camera"], ["lanes", "switch"], ["lanes", "tact"],
+    // --- real JST-PH zones and the RCY splice (pairs 74-80). The splice is empty unless cell_connector = "RCY"
+    ["bq", "plug_zones"], ["splice", "cell_swollen"], ["splice", "body"], ["splice", "plug"], ["splice", "antenna_keepout"],
+    ["splice", "lanes"], ["splice", "plug_zones"]
 ];
 module obj(n) {
     if (n == "body") body();
@@ -993,6 +1071,7 @@ module obj(n) {
     else if (n == "usb_cover") usb_cover_placed();
     else if (n == "lanes") lanes();
     else if (n == "antenna_keepout") antenna_keepout();
+    else if (n == "splice") splice_dummy();
     else if (n == "access") access_zones();
     else if (n == "plug_zones") plug_zones();
 }

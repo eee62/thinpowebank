@@ -1,0 +1,102 @@
+== 1. asserts / echo  (-D cell_connector="RCY" -D rcy_orient="flat")
+"OUTER SIZE (rounded, port edge, connectors kept, antenna bay): L x W x T = 194.809 x 54.08 x 10.98 mm"
+"Thickness drivers (interior heights): XIAO 8.98 cell 8.8 bq 8.37 MAX 8.37 camera 8.1 tact 8.45 switch 8.8 front-port 35.45 -> Hi = 8.98"
+"Layout X: row1 2.7..28.1  gap 14.21  row2 42.31..65.777  antenna bay 65.777..94.777  lead zone ..107.477  cell pocket 107.477..193.809"
+"Antenna: X 70.777..89.777 Y 4..43 Z 5.39; keep-out 5 mm; gap to cell foil 18.3 mm; to plug 4.39 mm; to front wall 4.39 mm"
+"JST-PH row gap: mouth-to-mouth 15.15 (jumper offset 3.05, S-bend 7.01837) -> gap12 14.21"
+"Cell leads must reach about 141.407 mm along the lane route (else a JST-PH extension). Lead zone 12.7 mm (RCY, splice flat 6.7 x 23.3 x 4)"
+"Rounded-corner growth at cell corners: 0.132233 mm per side; corner keep-out 0.87868"
+"Lens: opening r_in 5.2 (needs 4.27128), r_out 6.93205, lens-disc gap 0.6, max FOV 133.23"
+"Plug fit per side: X 0.628428  Y 0.25"
+asserts: PASS
+== 2. must-not-touch pairs
+DEBUG pair 0: body & cell                     EMPTY        PASS
+DEBUG pair 1: body & xiao                     EMPTY        PASS
+DEBUG pair 2: body & bq                       0.000000 mm3 (touch) PASS
+DEBUG pair 3: body & max                      0.000000 mm3 (touch) PASS
+DEBUG pair 4: body & camera                   EMPTY        PASS
+DEBUG pair 5: body & window                   EMPTY        PASS
+DEBUG pair 6: body & switch                   EMPTY        PASS
+DEBUG pair 7: body & tact                     EMPTY        PASS
+DEBUG pair 8: body & button_cap               0.000000 mm3 (touch) PASS
+DEBUG pair 9: body & ntc                      EMPTY        PASS
+DEBUG pair 10: body & antenna                 0.000000 mm3 (touch) PASS
+DEBUG pair 11: body & plug                    0.000000 mm3 (touch) PASS
+DEBUG pair 12: body & usb_cover               EMPTY        PASS
+DEBUG pair 13: body & lanes                   EMPTY        PASS
+DEBUG pair 14: body & plug_zones              EMPTY        PASS
+DEBUG pair 15: plug & cell                    EMPTY        PASS
+DEBUG pair 16: plug & xiao                    EMPTY        PASS
+DEBUG pair 17: plug & bq                      EMPTY        PASS
+DEBUG pair 18: plug & max                     EMPTY        PASS
+DEBUG pair 19: plug & camera                  EMPTY        PASS
+DEBUG pair 20: plug & switch                  EMPTY        PASS
+DEBUG pair 21: plug & tact                    EMPTY        PASS
+DEBUG pair 22: plug & lanes                   EMPTY        PASS
+DEBUG pair 23: plug & plug_zones              EMPTY        PASS
+DEBUG pair 24: plug & antenna                 EMPTY        PASS
+DEBUG pair 25: cell & xiao                    EMPTY        PASS
+DEBUG pair 26: cell & bq                      EMPTY        PASS
+DEBUG pair 27: cell & max                     EMPTY        PASS
+DEBUG pair 28: camera & window                EMPTY        PASS
+DEBUG pair 29: tact & button_cap              EMPTY        PASS
+DEBUG pair 30: xiao & bq                      EMPTY        PASS
+DEBUG pair 31: xiao & max                     EMPTY        PASS
+DEBUG pair 32: xiao & camera                  EMPTY        PASS
+DEBUG pair 33: bq & max                       EMPTY        PASS
+DEBUG pair 34: bq & camera                    EMPTY        PASS
+DEBUG pair 35: bq & switch                    EMPTY        PASS
+DEBUG pair 36: bq & tact                      EMPTY        PASS
+DEBUG pair 37: camera & switch                EMPTY        PASS
+DEBUG pair 38: camera & tact                  EMPTY        PASS
+DEBUG pair 39: switch & tact                  EMPTY        PASS
+DEBUG pair 40: xiao & plug_zones              EMPTY        PASS
+DEBUG pair 41: max & plug_zones               0.000000 mm3 (touch) PASS
+DEBUG pair 42: camera & plug_zones            EMPTY        PASS
+DEBUG pair 43: usb_cover & bq                 EMPTY        PASS
+DEBUG pair 44: body & cell_swollen            EMPTY        PASS
+DEBUG pair 45: antenna & cell_swollen         EMPTY        PASS
+DEBUG pair 46: plug & ntc_wire_room           EMPTY        PASS
+DEBUG pair 47: antenna_keepout & cell_swollen EMPTY        PASS
+DEBUG pair 48: antenna_keepout & xiao         0.000000 mm3 (touch) PASS
+DEBUG pair 49: antenna_keepout & bq           EMPTY        PASS
+DEBUG pair 50: antenna_keepout & max          EMPTY        PASS
+DEBUG pair 51: antenna_keepout & camera       EMPTY        PASS
+DEBUG pair 52: antenna_keepout & switch       EMPTY        PASS
+DEBUG pair 53: antenna_keepout & tact         EMPTY        PASS
+DEBUG pair 54: antenna_keepout & ntc          EMPTY        PASS
+DEBUG pair 55: antenna_keepout & lanes        EMPTY        PASS
+DEBUG pair 56: antenna_keepout & plug_zones   EMPTY        PASS
+DEBUG pair 57: access & body                  0.000000 mm3 (touch) PASS
+DEBUG pair 58: access & cell                  EMPTY        PASS
+DEBUG pair 59: access & xiao                  EMPTY        PASS
+DEBUG pair 60: access & bq                    EMPTY        PASS
+DEBUG pair 61: access & max                   EMPTY        PASS
+DEBUG pair 62: access & camera                EMPTY        PASS
+DEBUG pair 63: access & switch                EMPTY        PASS
+DEBUG pair 64: access & tact                  EMPTY        PASS
+DEBUG pair 65: access & antenna               EMPTY        PASS
+DEBUG pair 66: access & button_cap            EMPTY        PASS
+DEBUG pair 67: lanes & cell                   EMPTY        PASS
+DEBUG pair 68: lanes & xiao                   EMPTY        PASS
+DEBUG pair 69: lanes & bq                     EMPTY        PASS
+DEBUG pair 70: lanes & max                    EMPTY        PASS
+DEBUG pair 71: lanes & camera                 EMPTY        PASS
+DEBUG pair 72: lanes & switch                 EMPTY        PASS
+DEBUG pair 73: lanes & tact                   EMPTY        PASS
+DEBUG pair 74: bq & plug_zones                0.000000 mm3 (touch) PASS
+DEBUG pair 75: splice & cell_swollen          EMPTY        PASS
+DEBUG pair 76: splice & body                  EMPTY        PASS
+DEBUG pair 77: splice & plug                  EMPTY        PASS
+DEBUG pair 78: splice & antenna_keepout       EMPTY        PASS
+DEBUG pair 79: splice & lanes                 EMPTY        PASS
+DEBUG pair 80: splice & plug_zones            EMPTY        PASS
+pairs: 81 pass, 0 fail (of 81)
+== 3. printable parts render as simple solids
+body         simple=yes volumes=2 (2 = one solid) PASS
+plug         simple=yes volumes=2 (2 = one solid) PASS
+usb_cover_A  simple=yes volumes=2 (2 = one solid) PASS
+usb_cover_B  simple=yes volumes=2 (2 = one solid) PASS
+usb_cover_C  simple=yes volumes=2 (2 = one solid) PASS
+button_cap   simple=yes volumes=2 (2 = one solid) PASS
+coupon       simple=yes volumes=3 (2 = one solid) PASS

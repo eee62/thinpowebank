@@ -42,7 +42,7 @@ study 1 DEBUG pair 39: access & camera     EMPTY PASS
 study 1 DEBUG pair 40: access & switch     EMPTY PASS
 study 1 DEBUG pair 41: access & tact       EMPTY PASS
 study 1: 42 pass, 0 fail (of 42)
-"STUDY 2 LOWER-BOUND SIZE: L x W x T = 191.032 x 53.4645 x 17.94 mm, volume 183.229 cm3"
+"STUDY 2 LOWER-BOUND SIZE: L x W x T = 191.732 x 53.4645 x 17.94 mm, volume 183.9 cm3"
 study 2 DEBUG pair 0: shell & cell         EMPTY PASS
 study 2 DEBUG pair 1: shell & xiao         EMPTY PASS
 study 2 DEBUG pair 2: shell & max          EMPTY PASS
