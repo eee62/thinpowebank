@@ -1,0 +1,34 @@
+Plan B study, 603450 cell, rounded style. Outer L x W in mm (T = 11.78); worst case printed = nominal + JLC tolerance.
+antenna                                rot    smalls  outer L x W       area mm2   worst case printed  
+ceramic 13x5 (default, for reference)  0      band    98.596 x 68.960   6799       98.80 x 69.16        <- smallest
+ceramic 13x5 (default, for reference)  0      corner  108.529 x 68.960  7484       108.85 x 69.16       
+ceramic 13x5 (default, for reference)  90     band    98.596 x 76.960   7588       98.80 x 77.16        
+ceramic 13x5 (default, for reference)  90     corner  108.529 x 76.960  8352       108.85 x 77.16       
+
+Molex-206994-class 15.4x6.4            0      band    100.196 x 70.360  7050       100.50 x 70.56       <- smallest
+Molex-206994-class 15.4x6.4            0      corner  108.529 x 70.360  7636       108.85 x 70.56       
+Molex-206994-class 15.4x6.4            90     band    98.596 x 79.360   7825       98.80 x 79.56        
+Molex-206994-class 15.4x6.4            90     corner  108.529 x 79.360  8613       108.85 x 79.56       
+
+stick-on 25x6                          0      corner  108.529 x 69.960  7593       108.85 x 70.16       <- smallest
+stick-on 25x6                          0      band    109.796 x 69.960  7681       110.13 x 70.16       
+stick-on 25x6                          90     band    98.596 x 88.960   8771       98.80 x 89.16        
+stick-on 25x6                          90     corner  108.529 x 88.960  9655       108.85 x 89.16       
+
+Plan B study, 603450 cell, sharp style. Outer L x W in mm (T = 11.78); worst case printed = nominal + JLC tolerance.
+antenna                                rot    smalls  outer L x W       area mm2   worst case printed  
+ceramic 13x5 (default, for reference)  0      band    97.717 x 68.960   6739       97.92 x 69.16        <- smallest
+ceramic 13x5 (default, for reference)  0      corner  107.650 x 68.960  7424       107.97 x 69.16       
+ceramic 13x5 (default, for reference)  90     band    97.717 x 76.960   7520       97.92 x 77.16        
+ceramic 13x5 (default, for reference)  90     corner  107.650 x 76.960  8285       107.97 x 77.16       
+
+Molex-206994-class 15.4x6.4            0      band    99.317 x 70.360   6988       99.52 x 70.56        <- smallest
+Molex-206994-class 15.4x6.4            0      corner  107.650 x 70.360  7574       107.97 x 70.56       
+Molex-206994-class 15.4x6.4            90     band    97.717 x 79.360   7755       97.92 x 79.56        
+Molex-206994-class 15.4x6.4            90     corner  107.650 x 79.360  8543       107.97 x 79.56       
+
+stick-on 25x6                          0      corner  107.650 x 69.960  7531       107.97 x 70.16       <- smallest
+stick-on 25x6                          0      band    108.917 x 69.960  7620       109.24 x 70.16       
+stick-on 25x6                          90     band    97.717 x 88.960   8693       97.92 x 89.16        
+stick-on 25x6                          90     corner  107.650 x 88.960  9577       107.97 x 89.16       
+

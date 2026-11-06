@@ -11,7 +11,8 @@
 //  ===== WHICH PARAMETERS TO CHANGE WHEN YOU HAVE REAL SHOPEE PARTS =====
 //   section "PARTS YOU SWAP":  CELL      cell_t  cell_w  cell_l  cell_lead_len
 //                              ANTENNA   ant_type  ant_l  ant_w  ant_t  ant_cable_len
-//                              TAB       ant_place ("inside" default | "tab_x" | "tab_y")  ant_rot (0|90)  ant_tab_pos (-1 = auto)  tab_budget
+//                              (UNUSED, kept for reference: ant_place "tab_x"/"tab_y", ant_rot, ant_tab_pos, tab_budget. The outer shape must stay a clean rectangle.)
+//                              PLAN B:   to grow the whole body instead, raise max_L / max_W (README, "Plan B"). part = "wifi_test" / "wifi_test_plug" = the Wi-Fi test piece.
 //                              SWITCH    sw_l  sw_w  sw_h  sw_handle  sw_handle_h  sw_travel  sw_pin_l
 //                              BUTTON    tact_w  tact_h (<= 6.0)  tact_body_h  tact_act_d
 //   Then run:  openscad -o out.echo powerbank70.scad   (asserts say which dimension does not fit)
@@ -22,7 +23,7 @@
 // =============================================================================
 
 /* [What to render] */
-// assembled | exploded | section | layout | body | plug | usb_cover_A | usb_cover_B | usb_cover_C | button_cap | coupon | debug
+// assembled | exploded | section | layout | body | plug | usb_cover_A | usb_cover_B | usb_cover_C | button_cap | coupon | wifi_test | wifi_test_plug | wifi_test_view | debug
 part = "assembled";
 // "sharp" = version 1 (square edges), "rounded" = version 2
 style = "rounded";
@@ -62,12 +63,12 @@ cell_tol_pct = 0.05;     // pouch size tolerance (+-5 %). The swelling rule is c
 cell_lead_len = 100;     // wire length from the pouch to the JST-PH plug, from the listing [mm] (UNVERIFIED default)
 // ---- ANTENNA: 2.4 GHz, U.FL / IPEX cable ----
 ant_type = "ceramic";    // "ceramic" (small PCB / chip type) or "stick" (flat adhesive FPC). Only the label and the holder use it
-ant_l = 15;              // length [mm]
+ant_l = 13;              // length [mm]. DEFAULT 13 x 5 ceramic: outer 98.60 x 68.96 x 11.78. 15.0 is the longest that still fits in 100 x 70
 ant_w = 5;               // width [mm]
 ant_t = 1.0;             // thickness [mm]  (flat FPC types are about 0.1-0.2)
 ant_cable_len = 100;     // U.FL cable length from the listing [mm] (must be >= the straight line from the XIAO's U.FL socket)
-// ---- ANTENNA PLACEMENT ----
-ant_place = "inside";    // "inside" = in the main body | "tab_x" = in a separate tab on the +X (100 mm) end | "tab_y" = tab on the +Y (70 mm) side
+// ---- ANTENNA PLACEMENT: THE TAB OPTIONS BELOW ARE UNUSED (the outer shape must stay a clean rectangle). Keep ant_place = "inside". ----
+ant_place = "inside";    // UNUSED OPTION. "inside" = in the main body (the only one used) | "tab_x" = in a separate tab on the +X (100 mm) end | "tab_y" = tab on the +Y (70 mm) side
 ant_rot = 0;             // 0 = long side along X, 90 = long side along Y
 ant_tab_pos = -1;        // where the antenna sits along the tab edge (Y of its low edge for tab_x, X for tab_y). -1 = automatic best (smallest tab)
 smalls_place = "auto";   // switch + button: "auto" (corner beside the cell if it is free within max_L, else the band above the cell) | "corner" | "band"
@@ -657,15 +658,15 @@ module cell_stops() {
 
 // antenna holder: a plastic frame at mid-height hangs from the front wall on two posts. The antenna's adhesive back sticks to
 // the rim, so its radiating area is over an open window and it is >= ant_wall_gap from the walls (Seeed staff advice).
-module ant_holder() {
+module ant_holder(xa = x_a, ya = y_a) {
     px = ant_wall_gap - 0.5; py = 1.0;                                   // plate overhang beyond the antenna: ends / sides
     win = [max(0, a_ax - 2*ant_rim), max(0, a_ay - 2*ant_rim)];
     translate([0, 0, Zab - carrier_t]) linear_extrude(carrier_t) difference() {
-        translate([x_a - px, y_a - py]) square([a_ax + 2*px, a_ay + 2*py]);
-        if (win[0] > 0 && win[1] > 0) translate([x_a + ant_rim, y_a + ant_rim]) square(win);
+        translate([xa - px, ya - py]) square([a_ax + 2*px, a_ay + 2*py]);
+        if (win[0] > 0 && win[1] > 0) translate([xa + ant_rim, ya + ant_rim]) square(win);
     }
-    for (xx = [x_a - px + 1.0, x_a + a_ax + px - 1.0])
-        translate([xx, y_a + a_ay/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
+    for (xx = [xa - px + 1.0, xa + a_ax + px - 1.0])
+        translate([xx, ya + a_ay/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
 }
 // strain relief, site A: two tie posts flank the cell leads at the lead zone
 module anchors_cell() for (dy = [-4.5, 4.5])
@@ -949,6 +950,46 @@ function lane_boxes() = let(zt = Zw - eps, zl = Zi0 + eps) [
 module lanes() for (b = lane_boxes()) bx([b[0], b[1], b[2]], [b[3], b[4], b[5]]);
 
 // =============================================================================
+//  WI-FI TEST PIECE: the part of the real body around the XIAO and the antenna slot, cut out as a small closed box.
+//  Same walls, plug, XIAO posts and hold-down pads, same antenna frame and distances as the full build, no cell, boards, camera or switch.
+//  Print it once and swap the antenna in the one bay (ceramic, then stick-on) with the same XIAO, to compare RSSI. Export it with the
+//  antenna you want the bay sized for:  -D ant_l=15.4 -D ant_w=6.4 -D ant_t=0.15  (Molex-class), which also takes the 13 x 5 ceramic.
+// =============================================================================
+wt_x0 = x_x - 3;  wt_y0 = y_th;                                   // lower left corner of the piece (outer)
+wt_x1 = x_a_in + a_ax + ant_wall_gap + wall;  wt_y1 = y_a_in + a_ay + ant_wall_gap + wall;   // always the in-body slot (independent of the unused tab)
+wt_fx = tol(wt_x1 - wt_x0 - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
+wt_fy = tol(wt_y1 - wt_y0 - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
+module wifi_cavity_2d() translate([wt_x0 + wall, wt_y0 + wall]) rrect([wt_x1 - wt_x0 - 2*wall, wt_y1 - wt_y0 - 2*wall], Ri);
+module wifi_test() difference() {
+    union() {
+        difference() { rect_solid(wt_x0, wt_y0, wt_x1, wt_y1); translate([0, 0, -1]) linear_extrude(Zw + 1) wifi_cavity_2d(); }
+        intersection() { translate([0, 0, Zi0]) linear_extrude(Zw - Zi0 + eps) wifi_cavity_2d(); union() { xiao_posts(); ant_holder(x_a_in, y_a_in); } }
+    }
+    // opening in the left wall for the XIAO's USB-C cable (power and flashing during the test)
+    translate([wt_x0 - 1, xy_v(8.882), Zxb - 2.36]) rotate([90, 0, 90]) linear_extrude(wall + 2) stadium(usb_well_w, usb_well_h);
+}
+module wifi_test_plug(ribs = true) difference() {
+    union() {
+        linear_extrude(plug_t) translate([wt_x0 + wall + wt_fx, wt_y0 + wall + wt_fy])
+            rrect([wt_x1 - wt_x0 - 2*wall - 2*wt_fx, wt_y1 - wt_y0 - 2*wall - 2*wt_fy], max(0, Ri - min(wt_fx, wt_fy)));
+        for (vv = [2.0, 15.78]) cbox([Xx0 + 13.65, xy_v(vv), Zi0 - eps], [2.2, 2.0, (Zxb - 5.43) - pad_float - Zi0 + eps]);   // XIAO hold-down pads
+        if (plug_mode == "removable" && ribs) {
+            p = wt_fy + plug_rib_interf;
+            for (x = [wt_x0 + wall + 8 : plug_rib_pitch : wt_x1 - wall - 8]) {
+                translate([x, wt_y0 + wall + wt_fy - p + plug_rib_r, 0]) cylinder(r = plug_rib_r, h = plug_t);
+                translate([x, wt_y1 - wall - wt_fy + p - plug_rib_r, 0]) cylinder(r = plug_rib_r, h = plug_t);
+            }
+        }
+    }
+    if (plug_mode == "removable") translate([wt_x1 - wall - wt_fx - 1.0, (wt_y0 + wt_y1)/2 - 3, -eps]) cube([1.0 + eps, 6, 0.6]);   // pry notch
+}
+module wifi_test_assembled(ex = 0) {
+    color("white", 0.35) translate([0, 0, ex * 2.5]) wifi_test();
+    color("ivory") translate([0, 0, -ex * 1.5]) wifi_test_plug();
+    translate([0, 0, ex * 0.6]) { color("darkgreen") xiao_dummy(); color("gold") antenna_dummy(); }
+}
+
+// =============================================================================
 //  VIEWS, CHECK PAIRS
 // =============================================================================
 module components() {
@@ -997,7 +1038,9 @@ debug_pairs = [
     ["plug_zones", "bq"], ["plug_zones", "max"], ["plug_zones", "xiao"], ["plug_zones", "camera"], ["plug_zones", "cell"],
     // antenna tab (empty module when the antenna is inside): its inside space must hold nothing else
     ["tab_cavity", "cell_swollen"], ["tab_cavity", "xiao"], ["tab_cavity", "bq"], ["tab_cavity", "max"], ["tab_cavity", "camera"],
-    ["tab_cavity", "switch"], ["tab_cavity", "tact"], ["tab_cavity", "lanes"], ["tab_cavity", "plug_zones"], ["tab_cavity", "access"], ["tab_cavity", "ntc"]
+    ["tab_cavity", "switch"], ["tab_cavity", "tact"], ["tab_cavity", "lanes"], ["tab_cavity", "plug_zones"], ["tab_cavity", "access"], ["tab_cavity", "ntc"],
+    // Wi-Fi test piece: shell and lid against the XIAO and the antenna, and against each other
+    ["wifi_shell", "xiao"], ["wifi_shell", "wifi_antenna"], ["wifi_plug", "xiao"], ["wifi_plug", "wifi_antenna"], ["wifi_shell", "wifi_plug"]
 ];
 module obj(n) {
     if (n == "body") body();
@@ -1023,6 +1066,9 @@ module obj(n) {
     else if (n == "hot_zones") hot_zones();
     else if (n == "access") access_zones();
     else if (n == "tab_cavity") tab_cavity();
+    else if (n == "wifi_shell") { if (!tab_on) wifi_test(); }                       // the test piece belongs to the in-body slot
+    else if (n == "wifi_plug") { if (!tab_on) wifi_test_plug(ribs = false); }
+    else if (n == "wifi_antenna") { if (!tab_on) translate([x_a_in, y_a_in, Zab]) cube([a_ax, a_ay, ant_t]); }
 }
 module debug_view() {
     if (debug_pair >= 0) {
@@ -1090,4 +1136,8 @@ else if (part == "usb_cover_B") usb_cover(1);
 else if (part == "usb_cover_C") usb_cover(2);
 else if (part == "button_cap") rotate([180, 0, 0]) button_cap();
 else if (part == "coupon") fit_coupon();
+else if (part == "wifi_test") wifi_test();
+else if (part == "wifi_test_plug") wifi_test_plug();
+else if (part == "wifi_test_view") wifi_test_assembled(0);
+else if (part == "wifi_test_exploded") wifi_test_assembled(explode);
 else if (part == "debug") debug_view();

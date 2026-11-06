@@ -107,7 +107,12 @@ DEBUG pair 89: tab_cavity & lanes             EMPTY        PASS
 DEBUG pair 90: tab_cavity & plug_zones        EMPTY        PASS
 DEBUG pair 91: tab_cavity & access            EMPTY        PASS
 DEBUG pair 92: tab_cavity & ntc               EMPTY        PASS
-pairs: 93 pass, 0 fail (of 93)
+DEBUG pair 93: wifi_shell & xiao              EMPTY        PASS
+DEBUG pair 94: wifi_shell & wifi_antenna      EMPTY        PASS
+DEBUG pair 95: wifi_plug & xiao               EMPTY        PASS
+DEBUG pair 96: wifi_plug & wifi_antenna       EMPTY        PASS
+DEBUG pair 97: wifi_shell & wifi_plug         EMPTY        PASS
+pairs: 98 pass, 0 fail (of 98)
 == 3. printable parts render as simple solids
 body         simple=yes volumes=2 (2 = one solid) PASS
 plug         simple=yes volumes=2 (2 = one solid) PASS
@@ -116,3 +121,5 @@ usb_cover_B  simple=yes volumes=2 (2 = one solid) PASS
 usb_cover_C  simple=yes volumes=2 (2 = one solid) PASS
 button_cap   simple=yes volumes=2 (2 = one solid) PASS
 coupon       simple=yes volumes=3 (2 = one solid) PASS
+wifi_test    simple=yes volumes=2 (2 = one solid) PASS
+wifi_test_plug simple=yes volumes=2 (2 = one solid) PASS

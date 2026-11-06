@@ -1,49 +1,65 @@
 cell       | antenna                | outer size (limits off)        | result with limits
 -----------+------------------------+--------------------------------+--------------------------------------------
+603450     | ceramic13x5            | 98.5957 x 68.96 x 11.78 mm     | PASS
 603450     | ceramic15x5            | 99.7957 x 68.96 x 11.78 mm     | PASS
 603450     | ceramic10x4            | 98.5957 x 67.96 x 11.78 mm     | PASS
+603450     | molex15.4x6.4          | 100.196 x 70.36 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 94.2287, antenna row 85.8957, cam
 603450     | stick25x6              | 109.796 x 69.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 94.2287, antenna row 95.4957, cam
 603450     | stick42x12             | 126.796 x 75.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 94.2287, antenna row 112.496, cam
 603450     | stick45x7(Linx)        | 129.796 x 70.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 94.2287, antenna row 115.496, cam
 603450     | stick39x19(SeeedA02?)  | 123.796 x 82.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 94.2287, antenna row 109.496, cam
+603450max  | ceramic13x5            | 98.5957 x 69.46 x 11.78 mm     | PASS
 603450max  | ceramic15x5            | 99.7957 x 69.46 x 11.78 mm     | PASS
 603450max  | ceramic10x4            | 98.5957 x 68.46 x 11.78 mm     | PASS
+603450max  | molex15.4x6.4          | 100.196 x 70.86 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 96.2287, antenna row 85.8957, cam
 603450max  | stick25x6              | 109.796 x 70.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 96.2287, antenna row 95.4957, cam
 603450max  | stick42x12             | 126.796 x 76.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 96.2287, antenna row 112.496, cam
 603450max  | stick45x7(Linx)        | 129.796 x 71.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 96.2287, antenna row 115.496, cam
 603450max  | stick39x19(SeeedA02?)  | 123.796 x 83.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 96.2287, antenna row 109.496, cam
+503450     | ceramic13x5            | 98.5957 x 68.96 x 11.78 mm     | PASS
 503450     | ceramic15x5            | 99.7957 x 68.96 x 11.78 mm     | PASS
 503450     | ceramic10x4            | 98.5957 x 67.96 x 11.78 mm     | PASS
+503450     | molex15.4x6.4          | 100.196 x 70.36 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 94.2287, antenna row 85.8957, cam
 503450     | stick25x6              | 109.796 x 69.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 94.2287, antenna row 95.4957, cam
 503450     | stick42x12             | 126.796 x 75.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 94.2287, antenna row 112.496, cam
 503450     | stick45x7(Linx)        | 129.796 x 70.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 94.2287, antenna row 115.496, cam
 503450     | stick39x19(SeeedA02?)  | 123.796 x 82.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 94.2287, antenna row 109.496, cam
+503450max  | ceramic13x5            | 98.7287 x 69.76 x 11.78 mm     | PASS
 503450max  | ceramic15x5            | 99.7957 x 69.76 x 11.78 mm     | PASS
 503450max  | ceramic10x4            | 98.7287 x 68.76 x 11.78 mm     | PASS
+503450max  | molex15.4x6.4          | 100.196 x 71.16 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 97.2287, antenna row 85.8957, cam
 503450max  | stick25x6              | 109.796 x 70.76 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 97.2287, antenna row 95.4957, cam
 503450max  | stick42x12             | 126.796 x 76.76 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 97.2287, antenna row 112.496, cam
 503450max  | stick45x7(Linx)        | 129.796 x 71.76 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 97.2287, antenna row 115.496, cam
 503450max  | stick39x19(SeeedA02?)  | 123.796 x 83.76 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 97.2287, antenna row 109.496, cam
+603048     | ceramic13x5            | 98.5957 x 64.96 x 11.78 mm     | PASS
 603048     | ceramic15x5            | 99.7957 x 64.96 x 11.78 mm     | PASS
 603048     | ceramic10x4            | 98.5957 x 64.6236 x 11.78 mm   | PASS
+603048     | molex15.4x6.4          | 100.196 x 66.36 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 92.2287, antenna row 85.8957, cam
 603048     | stick25x6              | 109.796 x 65.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 92.2287, antenna row 95.4957, cam
 603048     | stick42x12             | 126.796 x 71.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 92.2287, antenna row 112.496, cam
 603048     | stick45x7(Linx)        | 129.796 x 66.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 92.2287, antenna row 115.496, cam
 603048     | stick39x19(SeeedA02?)  | 123.796 x 78.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 92.2287, antenna row 109.496, cam
+603048max  | ceramic13x5            | 98.5957 x 65.46 x 11.78 mm     | PASS
 603048max  | ceramic15x5            | 99.7957 x 65.46 x 11.78 mm     | PASS
 603048max  | ceramic10x4            | 98.5957 x 64.6236 x 11.78 mm   | PASS
+603048max  | molex15.4x6.4          | 100.196 x 66.86 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 94.2287, antenna row 85.8957, cam
 603048max  | stick25x6              | 109.796 x 66.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 94.2287, antenna row 95.4957, cam
 603048max  | stick42x12             | 126.796 x 72.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 94.2287, antenna row 112.496, cam
 603048max  | stick45x7(Linx)        | 129.796 x 67.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 94.2287, antenna row 115.496, cam
 603048max  | stick39x19(SeeedA02?)  | 123.796 x 79.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 123.796 (worst case printed 124.167) > 100. Something in the layout is too long: cell block 94.2287, antenna row 109.496, cam
+503040     | ceramic13x5            | 98.5287 x 64.96 x 11.78 mm     | PASS
 503040     | ceramic15x5            | 98.5287 x 64.96 x 11.78 mm     | PASS
 503040     | ceramic10x4            | 98.5287 x 64.6236 x 11.78 mm   | PASS
+503040     | molex15.4x6.4          | 98.5287 x 66.36 x 11.78 mm     | PASS
 503040     | stick25x6              | 98.5287 x 65.96 x 11.78 mm     | PASS
 503040     | stick42x12             | 113.496 x 71.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 113.496 (worst case printed 113.836) > 100. Something in the layout is too long: cell block 84.2287, antenna row 112.496, cam
 503040     | stick45x7(Linx)        | 116.496 x 66.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 116.496 (worst case printed 116.845) > 100. Something in the layout is too long: cell block 84.2287, antenna row 115.496, cam
 503040     | stick39x19(SeeedA02?)  | 110.496 x 78.96 x 11.78 mm     | FAIL: "LENGTH: outer L = 110.496 (worst case printed 110.827) > 100. Something in the layout is too long: cell block 84.2287, antenna row 109.496, cam
+503040max  | ceramic13x5            | 98.5957 x 65.46 x 11.78 mm     | PASS
 503040max  | ceramic15x5            | 99.7957 x 65.46 x 11.78 mm     | PASS
 503040max  | ceramic10x4            | 98.5957 x 64.6236 x 11.78 mm   | PASS
+503040max  | molex15.4x6.4          | 100.196 x 66.86 x 11.78 mm     | FAIL: "LENGTH: outer L = 100.196 (worst case printed 100.496) > 100. Something in the layout is too long: cell block 86.2287, antenna row 85.8957, cam
 503040max  | stick25x6              | 109.796 x 66.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 109.796 (worst case printed 110.125) > 100. Something in the layout is too long: cell block 86.2287, antenna row 95.4957, cam
 503040max  | stick42x12             | 126.796 x 72.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 126.796 (worst case printed 127.176) > 100. Something in the layout is too long: cell block 86.2287, antenna row 112.496, cam
 503040max  | stick45x7(Linx)        | 129.796 x 67.46 x 11.78 mm     | FAIL: "LENGTH: outer L = 129.796 (worst case printed 130.185) > 100. Something in the layout is too long: cell block 86.2287, antenna row 115.496, cam

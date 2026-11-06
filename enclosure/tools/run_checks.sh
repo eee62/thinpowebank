@@ -44,7 +44,7 @@ cat "$OUT/${tag}_pairs.txt"
 echo "pairs: $(grep -c PASS "$OUT/${tag}_pairs.txt") pass, $(grep -c FAIL "$OUT/${tag}_pairs.txt") fail (of $npairs)"
 
 echo "== 3. printable parts render as simple solids"
-for p in body plug usb_cover_A usb_cover_B usb_cover_C button_cap coupon; do
+for p in body plug usb_cover_A usb_cover_B usb_cover_C button_cap coupon wifi_test wifi_test_plug; do
   log=$(openscad -o "$OUT/${tag}_$p.stl" -D "part=\"$p\"" "${EXTRA[@]}" "$SCAD" 2>&1)
   simple=$(printf '%s' "$log" | grep -o 'Simple: *[a-z]*' | awk '{print $2}')
   vol=$(printf '%s' "$log" | grep -o 'Volumes: *[0-9]*' | awk '{print $2}')

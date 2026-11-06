@@ -25,8 +25,10 @@ CELLS=(
 )
 # name                 type     l    w    t     cable   (sizes are typical overseas listing values, NOT Shopee, all unverified)
 ANTENNAS=(
+  "ceramic13x5         ceramic  13   5    1.0   100"
   "ceramic15x5         ceramic  15   5    1.0   100"
   "ceramic10x4         ceramic  10   4    1.0   100"
+  "molex15.4x6.4       stick    15.4 6.4  0.15  100"
   "stick25x6           stick    25   6    0.2   100"
   "stick42x12          stick    42   12   0.2   120"
   "stick45x7(Linx)     stick    45   7    0.1   100"
