@@ -11,6 +11,7 @@
 //  ===== WHICH PARAMETERS TO CHANGE WHEN YOU HAVE REAL SHOPEE PARTS =====
 //   section "PARTS YOU SWAP":  CELL      cell_t  cell_w  cell_l  cell_lead_len
 //                              ANTENNA   ant_type  ant_l  ant_w  ant_t  ant_cable_len
+//                              TAB       ant_place ("inside" default | "tab_x" | "tab_y")  ant_rot (0|90)  ant_tab_pos (-1 = auto)  tab_budget
 //                              SWITCH    sw_l  sw_w  sw_h  sw_handle  sw_handle_h  sw_travel  sw_pin_l
 //                              BUTTON    tact_w  tact_h (<= 6.0)  tact_body_h  tact_act_d
 //   Then run:  openscad -o out.echo powerbank70.scad   (asserts say which dimension does not fit)
@@ -64,7 +65,13 @@ ant_type = "ceramic";    // "ceramic" (small PCB / chip type) or "stick" (flat a
 ant_l = 15;              // length [mm]
 ant_w = 5;               // width [mm]
 ant_t = 1.0;             // thickness [mm]  (flat FPC types are about 0.1-0.2)
-ant_cable_len = 100;     // U.FL cable length from the listing [mm] (must reach the XIAO's U.FL socket)
+ant_cable_len = 100;     // U.FL cable length from the listing [mm] (must be >= the straight line from the XIAO's U.FL socket)
+// ---- ANTENNA PLACEMENT ----
+ant_place = "inside";    // "inside" = in the main body | "tab_x" = in a separate tab on the +X (100 mm) end | "tab_y" = tab on the +Y (70 mm) side
+ant_rot = 0;             // 0 = long side along X, 90 = long side along Y
+ant_tab_pos = -1;        // where the antenna sits along the tab edge (Y of its low edge for tab_x, X for tab_y). -1 = automatic best (smallest tab)
+smalls_place = "auto";   // switch + button: "auto" (corner beside the cell if it is free within max_L, else the band above the cell) | "corner" | "band"
+tab_budget = 10;         // most the tab may add beyond max_L / max_W [mm] (checked at the worst-case printed size)
 // ---- SLIDE SWITCH (default = SS-12D00-G3 from the Sofng drawing; replace with the Shopee switch) ----
 sw_l = 8.8;  sw_w = 3.9;  sw_h = 3.5;     // body: length (along the slide), width, height above the seat
 sw_handle = 1.5;                           // handle width
@@ -395,18 +402,23 @@ y_cam_b = y_th + lane_t;
 cam_x = x_xr + ribbon_run + cam_blk/2;
 cam_y = y_cam_b + cam_blk/2;
 cam_jog = abs(cam_y - rib_y);
-x_a = x_xr + ant_keep;                            // 5 mm from the XIAO block
-y_a = max(y_cam_b + cam_blk + ant_keep, rib_y + rib_half + ant_keep);   // 5 mm above the camera block AND the ribbon
+tab_on = ant_place != "inside";
+a_ax = ant_rot == 0 ? ant_l : ant_w;              // antenna box size along X / Y after rotation
+a_ay = ant_rot == 0 ? ant_w : ant_l;
+v_ax = tab_on ? 0 : a_ax;                         // what the MAIN body has to hold (nothing, when the antenna is in a tab)
+v_ay = tab_on ? 0 : a_ay;
+x_a_in = x_xr + ant_keep;                         // inside the body: 5 mm from the XIAO block
+y_a_in = max(y_cam_b + cam_blk + ant_keep, rib_y + rib_half + ant_keep);   // 5 mm above the camera block AND the ribbon
 free_br = (max_L - wall) - 0.5 - x_cbr - lane_g;  // free width right of the cell block
-smalls_bottom = free_br >= max(sw_cradle[0], tact_cradle);
+smalls_bottom = smalls_place == "corner" ? true : smalls_place == "band" ? false : free_br >= max(sw_cradle[0], tact_cradle);
 tact_x = smalls_bottom ? x_cbr + lane_g + tact_cradle/2 : cam_x + cam_blk/2 + lane_g + tact_cradle/2;
 tact_y = smalls_bottom ? y_cell0 + 1.0 + tact_cradle/2 : y_cam_b + tact_cradle/2;
-sw_x = smalls_bottom ? x_cbr + lane_g + sw_cradle[0]/2 : x_a + ant_l + ant_keep + sw_cradle[0]/2;
-sw_y = smalls_bottom ? tact_y + tact_cradle/2 + lane_g + sw_cradle[1]/2 : y_a + sw_cradle[1]/2;
+sw_x = smalls_bottom ? x_cbr + lane_g + sw_cradle[0]/2 : tab_on ? cam_x : x_a_in + v_ax + ant_keep + sw_cradle[0]/2;   // antenna in a tab: switch goes above the camera
+sw_y = smalls_bottom ? tact_y + tact_cradle/2 + lane_g + sw_cradle[1]/2 : tab_on ? y_cam_b + cam_blk + lane_g + sw_cradle[1]/2 : y_a_in + sw_cradle[1]/2;
 
-right_extent = max(x_cbr + 0.5, x_a + ant_l + ant_wall_gap, cam_x + cam_blk/2 + 0.5,
+right_extent = max(x_cbr + 0.5, x_a_in + v_ax + ant_wall_gap, cam_x + cam_blk/2 + 0.5,
                    tact_x + tact_cradle/2 + 0.5, sw_x + sw_cradle[0]/2 + 0.5);
-top_extent   = max(P_len + 0.5, y_tb + XB_h, y_a + ant_w + ant_wall_gap, sw_y + sw_cradle[1]/2 + 0.5);
+top_extent   = max(P_len + 0.5, y_tb + XB_h, y_a_in + v_ay + ant_wall_gap, sw_y + sw_cradle[1]/2 + 0.5);
 L  = right_extent + wall;
 W  = top_extent + wall;
 Li = L - 2*wall;
@@ -414,16 +426,58 @@ Wi = W - 2*wall;
 y0 = wall;
 y_hi = y0 + Wi;
 
+y_gate = p_row1_end + gap12/2;                    // Y where the cell leads cross into P's gap
+// ---- antenna placement: inside the body, or in a tab on the +X / +Y end.
+// Metal the antenna must stay clear of (XY boxes: x0, y0, x1, y1, clearance, name). The check is the same box-against-box test as the
+// antenna_keepout / antenna_cellzone pairs below, so the automatic position is verified again by CGAL.
+ant_metals = concat(
+    [[x_cellb, y_cellb, x_cellb + cell_l, y_cellb + cell_w, ant_cell_clear, "cell foil"]],
+    [[x_pr - (p_y_bq0 + bq_l), p_x_row1, x_pr - p_y_bq0, p_row1_end, ant_keep, "bq25185"]],
+    [[x_pr - (p_y_mx0 + mx_l), p_x_mx0, x_pr - p_y_mx0, p_x_mx0 + mx_d, ant_keep, "MAX17048"]],
+    [for (z = P_zone_list()) let(b = pm3(z[0], z[1])) [b[0], b[1], b[3], b[4], ant_keep, "JST plug zone"]],
+    [[Xx0 - xiao_usb_over, Yx0, xiao_far, Yx0 + xiao_pcb_w, ant_keep, "XIAO"]],
+    [[cam_x - cam_blk/2, cam_y - cam_blk/2, cam_x + cam_blk/2, cam_y + cam_blk/2, ant_keep, "camera"]],
+    [[sw_x - sw_l/2, sw_y - sw_w/2, sw_x + sw_l/2, sw_y + sw_w/2, ant_keep, "slide switch"]],
+    has_button ? [[tact_x - tact_w/2, tact_y - tact_w/2, tact_x + tact_w/2, tact_y + tact_w/2, ant_keep, "button"]] : [],
+    [for (b = lane_boxes()) [b[0], b[1], b[3], b[4], ant_keep, "wire lane"]]);
+function cands(lo, hi) = hi >= lo ? [for (p = [lo : 0.5 : hi]) p] : [];
+function hit_x(m, ya) = ya - m[4] < m[3] - eps && ya + a_ay + m[4] > m[1] + eps;     // keep-out box overlaps the metal in Y
+function hit_y(m, xa) = xa - m[4] < m[2] - eps && xa + a_ax + m[4] > m[0] + eps;     // ... in X
+function need_x(ya) = max(concat([wall + ant_wall_gap], [for (m = ant_metals) if (hit_x(m, ya)) m[2] + m[4]]));   // smallest x_a at this Y
+function need_y(xa) = max(concat([wall + ant_wall_gap], [for (m = ant_metals) if (hit_y(m, xa)) m[3] + m[4]]));   // smallest y_a at this X
+function who_x(ya) = let(v = [for (m = ant_metals) hit_x(m, ya) ? m[2] + m[4] : -1e9])
+                     max(v) < wall + ant_wall_gap ? "plastic wall" : ant_metals[search(max(v), v)[0]][5];
+function who_y(xa) = let(v = [for (m = ant_metals) hit_y(m, xa) ? m[3] + m[4] : -1e9])
+                     max(v) < wall + ant_wall_gap ? "plastic wall" : ant_metals[search(max(v), v)[0]][5];
+tab_yc = cands(wall + ant_wall_gap, W - wall - ant_wall_gap - a_ay);       // positions along the +X end
+tab_xc = cands(wall + ant_wall_gap, L - wall - ant_wall_gap - a_ax);       // positions along the +Y side
+tab_nx = [for (y = tab_yc) need_x(y)];
+tab_ny = [for (x = tab_xc) need_y(x)];
+tab_ya = ant_tab_pos >= 0 ? ant_tab_pos : (len(tab_yc) > 0 ? tab_yc[search(min(tab_nx), tab_nx)[0]] : 0);
+tab_xa = ant_tab_pos >= 0 ? ant_tab_pos : (len(tab_xc) > 0 ? tab_xc[search(min(tab_ny), tab_ny)[0]] : 0);
+x_a = !tab_on ? x_a_in : ant_place == "tab_x" ? need_x(tab_ya) : tab_xa;
+y_a = !tab_on ? y_a_in : ant_place == "tab_x" ? tab_ya : need_y(tab_xa);
+tab_xe = x_a + a_ax + ant_wall_gap + wall;        // outer end of a +X tab
+tab_ye = y_a + a_ay + ant_wall_gap + wall;        // outer end of a +Y tab
+tab_x_on = ant_place == "tab_x" && tab_xe > L + eps;
+tab_y_on = ant_place == "tab_y" && tab_ye > W + eps;
+Lt = tab_x_on ? tab_xe : L;                       // total outer size including the tab
+Wt = tab_y_on ? tab_ye : W;
+// tab rectangles: outer (overlapping the body end so the union is one solid) and cavity
+tab_o = tab_x_on ? [L - 3*corner_r, y_a - ant_wall_gap - wall, tab_xe, y_a + a_ay + ant_wall_gap + wall]
+      : tab_y_on ? [x_a - ant_wall_gap - wall, W - 3*corner_r, x_a + a_ax + ant_wall_gap + wall, tab_ye] : [0, 0, 0, 0];
+tab_c = tab_x_on ? [L - wall - 1, y_a - ant_wall_gap, tab_xe - wall, y_a + a_ay + ant_wall_gap]
+      : tab_y_on ? [x_a - ant_wall_gap, W - wall - 1, x_a + a_ax + ant_wall_gap, tab_ye - wall] : [0, 0, 0, 0];
+
 // plug fit (per side), long dimension rule
-plug_fx = tol(Li) + (plug_mode == "permanent" ? glue_film : 0);
-plug_fy = tol(Wi) + (plug_mode == "permanent" ? glue_film : 0);
+plug_fx = tol(Lt - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
+plug_fy = tol(Wt - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
 
 // cell-lead route length (lead zone -> column -> across P's gap -> MAX JST #2)
-y_gate = p_row1_end + gap12/2;                    // Y where the cell leads cross into P's gap
 cell_lead_need = (x_cb - x_pr) + abs(y_gate - cell_cy) + (x_pr - (x_pr - (p_y_mx0 + mx_jst_c[1])))
                  + 2*(ph_out + ph_straight) + 10;
-cell_dist_ant = sqrt(pow(max(0, x_cellb - (x_a + ant_l), x_a - (x_cellb + cell_l)), 2)
-                   + pow(max(0, y_cellb - (y_a + ant_w), y_a - (y_cellb + cell_w)), 2));
+cell_dist_ant = sqrt(pow(max(0, x_cellb - (x_a + a_ax), x_a - (x_cellb + cell_l)), 2)
+                   + pow(max(0, y_cellb - (y_a + a_ay), y_a - (y_cellb + cell_w)), 2));
 
 // =============================================================================
 //  ASSERTS (computed from the parameters; each message names the dimension that fails)
@@ -432,16 +486,22 @@ function lim_tol(x) = limits_at_worst_case ? tol(x) : 0;   // printing tolerance
 // XIAO U.FL socket centre (STEP: u 17.734-20.734, v 2.613-5.713, w 1.25-2.5) and the straight line from it to the antenna box.
 // This is a LOWER bound on the cable length: the real route goes around the XIAO / camera ribbon and is longer. Slack is not modelled.
 ufl_pt = [Xx0 + 19.234, xy_v(4.163), Zxb - 1.875];
-ant_cable_min = norm([max(x_a - ufl_pt[0], 0, ufl_pt[0] - (x_a + ant_l)),
-                      max(y_a - ufl_pt[1], 0, ufl_pt[1] - (y_a + ant_w)),
+ant_cable_min = norm([max(x_a - ufl_pt[0], 0, ufl_pt[0] - (x_a + a_ax)),
+                      max(y_a - ufl_pt[1], 0, ufl_pt[1] - (y_a + a_ay)),
                       max(Zab - ufl_pt[2], 0, ufl_pt[2] - (Zab + ant_t))]);
 assert(ant_cable_len >= ant_cable_min, str("ANTENNA CABLE: the straight line from the XIAO U.FL socket to the antenna is ", ant_cable_min, " mm, the listing cable is only ", ant_cable_len, " mm"));
 assert(wall - tol_small >= min_wall, "outer wall below the 0.8 mm minimum after tolerance");
 assert(plug_t - tol_small >= min_wall, "plug below the 0.8 mm minimum after tolerance");
 assert(tact_h <= 6.0, "BUTTON RULE: tact_h must be <= 6.0 mm");
 assert(!enforce_limits || T + lim_tol(T) <= max_T + 1e-6, str("THICKNESS: T = ", T, " (worst case printed ", T + lim_tol(T), ") > ", max_T, ". Thickest item: see the Thickness drivers line"));
-assert(!enforce_limits || L + lim_tol(L) <= max_L + 1e-6, str("LENGTH: outer L = ", L, " (worst case printed ", L + lim_tol(L), ") > ", max_L, ". Something in the layout is too long: cell block ", x_cbr, ", antenna row ", x_a + ant_l + ant_wall_gap, ", camera/button ", cam_x + cam_blk/2, ", switch ", sw_x + sw_cradle[0]/2));
+assert(!enforce_limits || L + lim_tol(L) <= max_L + 1e-6, str("LENGTH: outer L = ", L, " (worst case printed ", L + lim_tol(L), ") > ", max_L, ". Something in the layout is too long: cell block ", x_cbr, ", antenna row ", x_a_in + v_ax + ant_wall_gap, ", camera/button ", cam_x + cam_blk/2, ", switch ", sw_x + sw_cradle[0]/2));
 assert(!enforce_limits || W + lim_tol(W) <= max_W + 1e-6, str("WIDTH: outer W = ", W, " (worst case printed ", W + lim_tol(W), ") > ", max_W));
+assert(!enforce_limits || Lt + lim_tol(Lt) <= max_L + tab_budget + 1e-6, str("TAB LENGTH: total L = ", Lt, " (worst case printed ", Lt + lim_tol(Lt), ") > ", max_L, " + tab_budget ", tab_budget));
+assert(!enforce_limits || Wt + lim_tol(Wt) <= max_W + tab_budget + 1e-6, str("TAB WIDTH: total W = ", Wt, " (worst case printed ", Wt + lim_tol(Wt), ") > ", max_W, " + tab_budget ", tab_budget));
+assert(!tab_on || (ant_place == "tab_x" ? len(tab_yc) > 0 : len(tab_xc) > 0), "TAB: the antenna is longer than the edge it should sit on");
+assert(!tab_on || ant_tab_pos < 0 || (ant_place == "tab_x" ? (ant_tab_pos >= wall + ant_wall_gap - eps && ant_tab_pos <= W - wall - ant_wall_gap - a_ay + eps)
+                                                         : (ant_tab_pos >= wall + ant_wall_gap - eps && ant_tab_pos <= L - wall - ant_wall_gap - a_ax + eps)), "TAB: ant_tab_pos is outside the body edge");
+assert(!tab_on || ant_tab_pos < 0 || (ant_place == "tab_x" ? ant_tab_pos >= 0 : true), "TAB: bad ant_tab_pos");
 assert(Zw - (Zc + cell_t_hi) - tol_small >= cell_swell - eps, "SWELL RULE: less than 0.8 mm above the cell at +5 % thickness");
 assert(H_cell <= Hi + eps, "cell too thick for the thickness budget");
 assert(cell_dist_ant >= ant_cell_clear - eps, str("ANTENNA RULE: antenna is only ", cell_dist_ant, " mm from the cell foil (need ", ant_cell_clear, ")"));
@@ -470,8 +530,12 @@ echo(str("WORST-CASE PRINTED SIZE (nominal + tolerance): ", L + tol(L), " x ", W
 echo(str("Thickness drivers: XIAO ", H_xiao, " cell ", H_cell, " bq ", H_bq, " MAX ", H_mx, " camera ", H_cam, " button ", H_tact, " switch ", H_sw, " -> interior ", Hi));
 echo(str("Swell room above the cell at +5 %: ", Zw - (Zc + cell_t_hi), " mm (rule 0.8 + 0.2 print tolerance); XIAO back to front wall ", xiao_wall_gap, " mm"));
 echo(str("Layout X: P ", x_p0, "..", x_pr, "  cell block ", x_cb, "..", x_cbr, "  XIAO ", x_x, "..", x_xr, "  camera ", cam_x - cam_blk/2, "..", cam_x + cam_blk/2,
-         "  antenna ", x_a, "..", x_a + ant_l, "  buttons/switch: ", smalls_bottom ? "bottom right" : "band above the cell"));
-echo(str("Layout Y: P 0..", P_len, "  cell ", y_cell0, "..", y_th, "  XIAO ", y_tb, "..", y_tb + XB_h, "  antenna ", y_a, "..", y_a + ant_w));
+         "  antenna ", x_a, "..", x_a + a_ax, "  buttons/switch: ", smalls_bottom ? "bottom right" : "band above the cell"));
+echo(str("Layout Y: P 0..", P_len, "  cell ", y_cell0, "..", y_th, "  XIAO ", y_tb, "..", y_tb + XB_h, "  antenna ", y_a, "..", y_a + a_ay));
+echo(str("ANTENNA PLACEMENT: ", ant_place, ", rotation ", ant_rot, ", box x ", x_a, "..", x_a + a_ax, " y ", y_a, "..", y_a + a_ay,
+         tab_on ? str(", binding metal: ", ant_place == "tab_x" ? who_x(y_a) : who_y(x_a)) : ""));
+echo(str("TOTAL OUTER SIZE incl. tab: ", Lt, " x ", Wt, " x ", T, " mm   main body ", L, " x ", W, "   extra over ", max_L, " x ", max_W, ": length ", max(0, Lt - max_L), ", width ", max(0, Wt - max_W),
+         "   tab ", tab_x_on ? "on the +X end" : tab_y_on ? "on the +Y side" : "not needed (antenna fits inside the main footprint)"));
 echo(str("Antenna cable: straight line from the XIAO U.FL socket to the antenna box = ", ant_cable_min, " mm (lower bound, the real route is longer); listing cable ", ant_cable_len, " mm"));
 echo(str("Antenna: ", cell_dist_ant, " mm from the cell foil (rule 10); ", ant_keep, " mm keep-out from other metal; ", Zab - Zi0, " mm to the plug, ", Zw - Zab - ant_t, " mm to the front wall"));
 echo(str("JST-PH gap in P: mouth-to-mouth ", ph_gap_mouth, " (jumper offset ", jump_d, ") -> gap ", gap12, ". Cell leads needed about ", cell_lead_need, " mm; listing says ", cell_lead_len, " mm: ",
@@ -505,13 +569,25 @@ module corner_profile(R, H, ef, eb) {    // (r, z) profile of one rounded corner
 // =============================================================================
 //  OUTER SHELL AND CAVITY
 // =============================================================================
-module outer_solid() {
+module rect_solid(x0, y0, x1, y1) {
     if (style == "rounded")
-        hull() for (x = [corner_r, L - corner_r], y = [corner_r, W - corner_r])
+        hull() for (x = [x0 + corner_r, x1 - corner_r], y = [y0 + corner_r, y1 - corner_r])
             translate([x, y, 0]) rotate_extrude($fn = max($fn, 48)) corner_profile(corner_r, T, edge_r_front, edge_r_back);
-    else cube([L, W, T]);
+    else translate([x0, y0, 0]) cube([x1 - x0, y1 - y0, T]);
 }
-module cavity_2d() translate([wall, wall]) rrect([Li, Wi], Ri);
+module outer_solid() {
+    rect_solid(0, 0, L, W);
+    if (tab_x_on || tab_y_on) rect_solid(tab_o[0], tab_o[1], tab_o[2], tab_o[3]);
+}
+module tab_shape(x0, y0, x1, y1, r) {      // rounded at the free end only; the end next to the body is square
+    translate([x0, y0]) rrect([x1 - x0, y1 - y0], r);
+    if (tab_x_on) translate([x0, y0]) square([min(2*r, x1 - x0), y1 - y0]);
+    if (tab_y_on) translate([x0, y0]) square([x1 - x0, min(2*r, y1 - y0)]);
+}
+module cavity_2d() {
+    translate([wall, wall]) rrect([Li, Wi], Ri);
+    if (tab_x_on || tab_y_on) tab_shape(tab_c[0], tab_c[1], tab_c[2], tab_c[3], Ri);
+}
 module cavity_solid(z0 = -1, z1 = Zw) translate([0, 0, z0]) linear_extrude(z1 - z0) cavity_2d();
 
 // =============================================================================
@@ -582,14 +658,14 @@ module cell_stops() {
 // antenna holder: a plastic frame at mid-height hangs from the front wall on two posts. The antenna's adhesive back sticks to
 // the rim, so its radiating area is over an open window and it is >= ant_wall_gap from the walls (Seeed staff advice).
 module ant_holder() {
-    px = 3.0; py = 1.0;                                   // plate overhang beyond the antenna: ends / sides
-    win = [max(0, ant_l - 2*ant_rim), max(0, ant_w - 2*ant_rim)];
+    px = ant_wall_gap - 0.5; py = 1.0;                                   // plate overhang beyond the antenna: ends / sides
+    win = [max(0, a_ax - 2*ant_rim), max(0, a_ay - 2*ant_rim)];
     translate([0, 0, Zab - carrier_t]) linear_extrude(carrier_t) difference() {
-        translate([x_a - px, y_a - py]) square([ant_l + 2*px, ant_w + 2*py]);
+        translate([x_a - px, y_a - py]) square([a_ax + 2*px, a_ay + 2*py]);
         if (win[0] > 0 && win[1] > 0) translate([x_a + ant_rim, y_a + ant_rim]) square(win);
     }
-    for (xx = [x_a - px + 1.0, x_a + ant_l + px - 1.0])
-        translate([xx, y_a + ant_w/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
+    for (xx = [x_a - px + 1.0, x_a + a_ax + px - 1.0])
+        translate([xx, y_a + a_ay/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
 }
 // strain relief, site A: two tie posts flank the cell leads at the lead zone
 module anchors_cell() for (dy = [-4.5, 4.5])
@@ -599,9 +675,9 @@ module ledges() {
         bx([x - ledge_len/2, wall - eps, Zi0], [x + ledge_len/2, wall + ledge_d, Zi0 + ledge_h]);
     for (y = [12, 32, 52])
         bx([wall - eps, y - ledge_len/2, Zi0], [wall + ledge_d, y + ledge_len/2, Zi0 + ledge_h]);
-    for (y = [y_cell0 + 8, y_th - 8])
+    for (y = [y_cell0 + 8, y_th - 8]) if (!(tab_x_on && y + ledge_len/2 > tab_c[1] - 1 && y - ledge_len/2 < tab_c[3] + 1))   // none where the tab opens the wall
         bx([L - wall - ledge_d, y - ledge_len/2, Zi0], [L - wall + eps, y + ledge_len/2, Zi0 + ledge_h]);
-    for (x = [x_x + 6, x_xr - 6])
+    for (x = [x_x + 6, x_xr - 6]) if (!(tab_y_on && x + ledge_len/2 > tab_c[0] - 1 && x - ledge_len/2 < tab_c[2] + 1))
         bx([x - ledge_len/2, W - wall - ledge_d, Zi0], [x + ledge_len/2, W - wall + eps, Zi0 + ledge_h]);
 }
 module internal_features() {
@@ -668,7 +744,12 @@ module body() {
 // =============================================================================
 //  BOTTOM PLUG
 // =============================================================================
-module plug_2d() translate([wall + plug_fx, wall + plug_fy]) rrect([Li - 2*plug_fx, Wi - 2*plug_fy], max(0, Ri - min(plug_fx, plug_fy)));
+module plug_2d() {
+    translate([wall + plug_fx, wall + plug_fy]) rrect([Li - 2*plug_fx, Wi - 2*plug_fy], max(0, Ri - min(plug_fx, plug_fy)));
+    if (tab_x_on || tab_y_on)
+        tab_shape(tab_x_on ? tab_c[0] : tab_c[0] + plug_fx, tab_x_on ? tab_c[1] + plug_fy : tab_c[1],     // starts where the cavity opens: it still overlaps the body plug by 1 - fit
+                  tab_c[2] - plug_fx, tab_c[3] - plug_fy, max(0, Ri - max(plug_fx, plug_fy)));
+}
 module plug(ribs = true) {
     difference() {
         union() {
@@ -807,11 +888,16 @@ module tact_dummy() if (has_button) {
     translate([tact_x, tact_y, Ztb + tact_body_h - eps]) cylinder(d = tact_act_d, h = tact_h - tact_body_h + eps);
     for (sx = [-1, 1], sy = [-1, 1]) cbox([tact_x + sx*3.25, tact_y + sy*2.25, Ztb - (tact_leg_clear - 0.2)], [0.7, 0.3, tact_leg_clear - 0.2 + eps]);
 }
-module antenna_dummy() translate([x_a, y_a, Zab]) cube([ant_l, ant_w, ant_t]);
+module antenna_dummy() translate([x_a, y_a, Zab]) cube([a_ax, a_ay, ant_t]);
 
 // RULE: no other metal within ant_keep of the antenna (full cavity height); the cell foil needs ant_cell_clear
-module antenna_keepout() bx([x_a - ant_keep, y_a - ant_keep, Zi0], [x_a + ant_l + ant_keep, y_a + ant_w + ant_keep, Zw]);
-module antenna_cellzone() bx([x_a - ant_cell_clear, y_a - ant_cell_clear, Zi0], [x_a + ant_l + ant_cell_clear, y_a + ant_w + ant_cell_clear, Zw]);
+module antenna_keepout() bx([x_a - ant_keep, y_a - ant_keep, Zi0], [x_a + a_ax + ant_keep, y_a + a_ay + ant_keep, Zw]);
+module antenna_cellzone() bx([x_a - ant_cell_clear, y_a - ant_cell_clear, Zi0], [x_a + a_ax + ant_cell_clear, y_a + a_ay + ant_cell_clear, Zw]);
+// the antenna tab's inside space beyond the body wall (empty when there is no tab): nothing else may be in it
+module tab_cavity() {
+    if (tab_x_on) bx([L - wall, tab_c[1], Zi0], [tab_c[2], tab_c[3], Zw]);
+    if (tab_y_on) bx([tab_c[0], W - wall, Zi0], [tab_c[2], tab_c[3], Zw]);
+}
 // hot boards: the cell must stay therm_g away
 module hot_zones() {
     P_T() bx([p_x_row1 - therm_g, p_y_bq0 - therm_g, Zi0], [p_row1_end + therm_g, p_y_bq0 + bq_l + therm_g, Zw]);
@@ -842,25 +928,25 @@ module access_zones() {
 
 // reserved wire lanes: free of printed material AND of boards/parts; none may enter the antenna keep-out.
 // They are reserved volumes along the routes below, NOT a simulation of flexible cables.
-module lanes() {
-    zt = Zw - eps;  zl = Zi0 + eps;
-    y_gate_c = y_gate;
+function pm3(a, b) = [x_pr - b[1], a[0], a[2], x_pr - a[1], b[0], b[2]];   // P-local box -> outer box (x0, y0, z0, x1, y1, z1)
+function lane_boxes() = let(zt = Zw - eps, zl = Zi0 + eps) [
     // cell leads + NTC: lead zone -> column between P and the cell -> into P's gap
-    bx([x_cb + eps, cell_cy - 2.5, zl], [x_cell - eps, cell_cy + 2.5, zt]);
-    bx([x_pr + eps, min(cell_cy, y_gate_c) - 2.5, zl], [x_cb - eps, max(cell_cy, y_gate_c) + 2.5, zt]);
+    [x_cb + eps, cell_cy - 2.5, zl, x_cell - eps, cell_cy + 2.5, zt],
+    [x_pr + eps, min(cell_cy, y_gate) - 2.5, zl, x_cb - eps, max(cell_cy, y_gate) + 2.5, zt],
     // P's gap (jumper, LOAD, cell-lead bend): between the posts, clear of the finger columns' ends
-    P_T() bx([p_row1_end + eps, 2.5, zl], [p_x_row2 + clr_board - eps, P_w - 2.5, zt]);
+    pm3([p_row1_end + eps, 2.5, zl], [p_x_row2 + clr_board - eps, P_w - 2.5, zt]),
     // QT strip beside the MAX17048 (QT cable, switch / button / XIAO wires) and the lane between P and the XIAO
-    P_T() bx([p_x_row2 + eps, 0.3, zl], [P_len - 0.3, p_y_mx0 - eps, zt]);
-    bx([x_pr + eps, y_tb, zl], [x_x - eps, P_len, zt]);
+    pm3([p_x_row2 + eps, 0.3, zl], [P_len - 0.3, p_y_mx0 - eps, zt]),
+    [x_pr + eps, y_tb, zl, x_x - eps, P_len, zt],
     // thermal lane under the band: switch, button and LOAD wires between the cell and the XIAO / camera / button
-    bx([x_pr + eps, y_th + eps, zl], [right_extent - 0.5, y_cam_b - eps, zt]);
+    [x_pr + eps, y_th + eps, zl, right_extent - 0.5, y_cam_b - eps, zt],
     // camera ribbon: under the flipped XIAO stack, then the run and the jog to the camera port
-    bx([Xx0 + 15.1, rib_y - rib_half, zl], [x_xr - eps, rib_y + rib_half, Zxs - eps]);
-    bx([x_xr, min(rib_y, cam_y) - rib_half, zl], [cam_x - cam_w/2 - 3.0 - eps, max(rib_y, cam_y) + rib_half, zt]);   // ends where the ribbon stub (in the camera model) begins
+    [Xx0 + 15.1, rib_y - rib_half, zl, x_xr - eps, rib_y + rib_half, Zxs - eps],
+    [x_xr, min(rib_y, cam_y) - rib_half, zl, cam_x - cam_w/2 - 3.0 - eps, max(rib_y, cam_y) + rib_half, zt],   // ends where the ribbon stub (in the camera model) begins
     // NTC channel under the cell, between the rails
-    bx([x_cell + eps, cell_cy - 1.0, zl], [x_cellb + ntc_from_lead_end - ntc_l/2 - 0.8, cell_cy + 1.0, Zc - eps]);
-}
+    [x_cell + eps, cell_cy - 1.0, zl, x_cellb + ntc_from_lead_end - ntc_l/2 - 0.8, cell_cy + 1.0, Zc - eps]
+];
+module lanes() for (b = lane_boxes()) bx([b[0], b[1], b[2]], [b[3], b[4], b[5]]);
 
 // =============================================================================
 //  VIEWS, CHECK PAIRS
@@ -908,7 +994,10 @@ debug_pairs = [
     // wire lanes against every component
     ["lanes", "cell"], ["lanes", "xiao"], ["lanes", "bq"], ["lanes", "max"], ["lanes", "camera"], ["lanes", "switch"], ["lanes", "tact"],
     // plug zones against the components
-    ["plug_zones", "bq"], ["plug_zones", "max"], ["plug_zones", "xiao"], ["plug_zones", "camera"], ["plug_zones", "cell"]
+    ["plug_zones", "bq"], ["plug_zones", "max"], ["plug_zones", "xiao"], ["plug_zones", "camera"], ["plug_zones", "cell"],
+    // antenna tab (empty module when the antenna is inside): its inside space must hold nothing else
+    ["tab_cavity", "cell_swollen"], ["tab_cavity", "xiao"], ["tab_cavity", "bq"], ["tab_cavity", "max"], ["tab_cavity", "camera"],
+    ["tab_cavity", "switch"], ["tab_cavity", "tact"], ["tab_cavity", "lanes"], ["tab_cavity", "plug_zones"], ["tab_cavity", "access"], ["tab_cavity", "ntc"]
 ];
 module obj(n) {
     if (n == "body") body();
@@ -933,6 +1022,7 @@ module obj(n) {
     else if (n == "antenna_cellzone") antenna_cellzone();
     else if (n == "hot_zones") hot_zones();
     else if (n == "access") access_zones();
+    else if (n == "tab_cavity") tab_cavity();
 }
 module debug_view() {
     if (debug_pair >= 0) {
@@ -991,7 +1081,7 @@ module fit_coupon() {
 
 if (part == "assembled") assembled(0);
 else if (part == "exploded") assembled(explode);
-else if (part == "section") intersection() { assembled(0); translate([-1, -1, -1]) cube([L + 2, cam_y + 1, T + 2]); }
+else if (part == "section") intersection() { assembled(0); translate([-1, -1, -1]) cube([Lt + 2, cam_y + 1, T + 2]); }
 else if (part == "layout") { components(); color("ivory") plug(); color("orange", 0.5) plug_zones(); color("green", 0.25) access_zones(); color("cyan", 0.25) antenna_keepout(); color("red", 0.25) lanes(); }
 else if (part == "body") body();
 else if (part == "plug") plug();

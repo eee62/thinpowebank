@@ -5,6 +5,8 @@
 "Swell room above the cell at +5 %: 3.03 mm (rule 0.8 + 0.2 print tolerance); XIAO back to front wall 1.4 mm"
 "Layout X: P 1.87868..34.0287  cell block 38.0287..84.2287  XIAO 36.0287..62.4957  camera 71.4957..86.0957  antenna 67.4957..92.4957  buttons/switch: bottom right"
 "Layout Y: P 0..63.1236  cell 1..32.2  XIAO 36.2..59.68  antenna 55.96..61.96"
+"ANTENNA PLACEMENT: inside, rotation 0, box x 67.4957..92.4957 y 55.96..61.96"
+"TOTAL OUTER SIZE incl. tab: 98.5287 x 65.96 x 11.78 mm   main body 98.5287 x 65.96   extra over 100 x 70: length 0, width 0   tab not needed (antenna fits inside the main footprint)"
 "Antenna cable: straight line from the XIAO U.FL socket to the antenna box = 9.85235 mm (lower bound, the real route is longer); listing cable 100 mm"
 "Antenna: 24.36 mm from the cell foil (rule 10); 5 mm keep-out from other metal; 4.79 mm to the plug, 4.79 mm to the front wall"
 "JST-PH gap in P: mouth-to-mouth 15.2436 (jumper offset 3.3) -> gap 14.3036. Cell leads needed about 64.2218 mm; listing says 100 mm: OK"
@@ -94,7 +96,18 @@ DEBUG pair 78: plug_zones & max               0.000000 mm3 (touch) PASS
 DEBUG pair 79: plug_zones & xiao              EMPTY        PASS
 DEBUG pair 80: plug_zones & camera            EMPTY        PASS
 DEBUG pair 81: plug_zones & cell              EMPTY        PASS
-pairs: 82 pass, 0 fail (of 82)
+DEBUG pair 82: tab_cavity & cell_swollen      EMPTY        PASS
+DEBUG pair 83: tab_cavity & xiao              EMPTY        PASS
+DEBUG pair 84: tab_cavity & bq                EMPTY        PASS
+DEBUG pair 85: tab_cavity & max               EMPTY        PASS
+DEBUG pair 86: tab_cavity & camera            EMPTY        PASS
+DEBUG pair 87: tab_cavity & switch            EMPTY        PASS
+DEBUG pair 88: tab_cavity & tact              EMPTY        PASS
+DEBUG pair 89: tab_cavity & lanes             EMPTY        PASS
+DEBUG pair 90: tab_cavity & plug_zones        EMPTY        PASS
+DEBUG pair 91: tab_cavity & access            EMPTY        PASS
+DEBUG pair 92: tab_cavity & ntc               EMPTY        PASS
+pairs: 93 pass, 0 fail (of 93)
 == 3. printable parts render as simple solids
 body         simple=yes volumes=2 (2 = one solid) PASS
 plug         simple=yes volumes=2 (2 = one solid) PASS

@@ -1,0 +1,50 @@
+cell 603450 (6.0, 34.0, 50.0) (thickness, width, length), tab budget 10.0 mm, limits 100 x 70 x 12 at worst-case printed size
+antenna                            placement      total L x W       extra L       extra W   cable>=   decided by     result
+ceramic 13x5 (baseline)            inside r0      98.60 x 68.96     0.00          0.00      10                       PASS
+ceramic 13x5 (baseline)            tab_x r90      109.60 x 64.68    9.60          0.00      42        button         PASS
+ceramic 13x5 (baseline)            tab_x r0       108.10 x 64.68    8.10          0.00      33        camera         PASS
+ceramic 13x5 (baseline)            tab_y r0       98.60 x 74.68     0.00          4.68      10        XIAO           PASS
+ceramic 13x5 (baseline)            tab_y r90      98.60 x 76.30     0.00          6.30      30        camera         PASS
+
+stick 25x6                         inside r0      108.53 x 69.96    8.53          0.00      10                       PASS
+stick 25x6                         tab_x r90      113.63 x 64.68    13.63         0.00      53        cell foil      fail: TAB LENGTH: total L = 113.629 (worst case printed 113.97) > 100 + tab_
+stick 25x6                         tab_x r0       120.10 x 64.68    20.10         0.00      33        camera         fail: TAB LENGTH: total L = 120.096 (worst case printed 120.456) > 100 + tab
+stick 25x6                         tab_y r0       98.60 x 75.68     0.00          5.68      9         XIAO           PASS
+stick 25x6                         tab_y r90      98.60 x 88.30     0.00          18.30     30        camera         fail: TAB WIDTH: total W = 88.3 (worst case printed 88.5) > 70 + tab_budget 
+
+stick 40x8                         inside r0      111.50 x 71.96    11.50         1.96      10                       fail: LENGTH: outer L = 111.496 (worst case printed 111.83) > 110. Something
+stick 40x8                         tab_x r90      115.63 x 64.68    15.63         0.00      47        cell foil      fail: TAB LENGTH: total L = 115.629 (worst case printed 115.976) > 100 + tab
+stick 40x8                         tab_x r0       135.10 x 64.68    35.10         0.00      33        camera         fail: TAB LENGTH: total L = 135.096 (worst case printed 135.501) > 100 + tab
+stick 40x8                         tab_y r0       98.60 x 78.20     0.00          8.20      10        slide switch   PASS
+stick 40x8                         tab_y r90      98.60 x 109.68    0.00          39.68     13        XIAO           fail: TAB WIDTH: total W = 109.68 (worst case printed 110.009) > 70 + tab_bu
+
+stick 42x12                        inside r0      113.50 x 75.96    13.50         5.96      10                       fail: LENGTH: outer L = 113.496 (worst case printed 113.836) > 110. Somethin
+stick 42x12                        tab_x r90      119.63 x 64.68    19.63         0.00      46        cell foil      fail: TAB LENGTH: total L = 119.629 (worst case printed 119.988) > 100 + tab
+stick 42x12                        tab_x r0       146.60 x 64.68    46.60         0.00      42        button         fail: TAB LENGTH: total L = 146.596 (worst case printed 147.035) > 100 + tab
+stick 42x12                        tab_y r0       98.60 x 82.20     0.00          12.20     10        slide switch   fail: TAB WIDTH: total W = 82.2 (worst case printed 82.4) > 70 + tab_budget 
+stick 42x12                        tab_y r90      98.60 x 111.68    0.00          41.68     10        XIAO           fail: TAB WIDTH: total W = 111.68 (worst case printed 112.015) > 70 + tab_bu
+
+stick 45x7                         inside r0      116.50 x 70.96    16.50         0.96      10                       fail: LENGTH: outer L = 116.496 (worst case printed 116.845) > 110. Somethin
+stick 45x7                         tab_x r90      114.63 x 64.68    14.63         0.00      46        cell foil      fail: TAB LENGTH: total L = 114.629 (worst case printed 114.973) > 100 + tab
+stick 45x7                         tab_x r0       140.10 x 64.68    40.10         0.00      33        camera         fail: TAB LENGTH: total L = 140.096 (worst case printed 140.516) > 100 + tab
+stick 45x7                         tab_y r0       98.60 x 77.20     0.00          7.20      10        slide switch   PASS
+stick 45x7                         tab_y r90      98.60 x 114.68    0.00          44.68     14        XIAO           fail: TAB WIDTH: total W = 114.68 (worst case printed 115.024) > 70 + tab_bu
+
+stick 39x19                        inside r0      110.50 x 82.96    10.50         12.96     10                       fail: LENGTH: outer L = 110.496 (worst case printed 110.827) > 110. Somethin
+stick 39x19                        tab_x r90      126.63 x 64.68    26.63         0.00      47        cell foil      fail: TAB LENGTH: total L = 126.629 (worst case printed 127.009) > 100 + tab
+stick 39x19                        tab_x r0       146.63 x 64.68    46.63         0.00      56        cell foil      fail: TAB LENGTH: total L = 146.629 (worst case printed 147.069) > 100 + tab
+stick 39x19                        tab_y r0       98.60 x 89.20     0.00          19.20     10        slide switch   fail: TAB WIDTH: total W = 89.2 (worst case printed 89.4) > 70 + tab_budget 
+stick 39x19                        tab_y r90      98.60 x 108.68    0.00          38.68     9         XIAO           fail: TAB WIDTH: total W = 108.68 (worst case printed 109.006) > 70 + tab_bu
+
+Linx SH 25.4x20.1 (datasheet)      inside r0      108.53 x 84.06    8.53          14.06     10                       fail: WIDTH: outer W = 84.06 (worst case printed 84.26) > 80
+Linx SH 25.4x20.1 (datasheet)      tab_x r90      127.73 x 64.68    27.73         0.00      53        cell foil      fail: TAB LENGTH: total L = 127.729 (worst case printed 128.112) > 100 + tab
+Linx SH 25.4x20.1 (datasheet)      tab_x r0       133.03 x 64.68    33.03         0.00      56        cell foil      fail: TAB LENGTH: total L = 133.029 (worst case printed 133.428) > 100 + tab
+Linx SH 25.4x20.1 (datasheet)      tab_y r0       98.60 x 89.78     0.00          19.78     9         XIAO           fail: TAB WIDTH: total W = 89.78 (worst case printed 89.98) > 70 + tab_budge
+Linx SH 25.4x20.1 (datasheet)      tab_y r90      98.60 x 95.08     0.00          25.08     9         XIAO           fail: TAB WIDTH: total W = 95.08 (worst case printed 95.28) > 70 + tab_budge
+
+Molex 206994 15.4x6.4 (datasheet)  inside r0      100.20 x 70.36    0.20          0.36      10                       PASS
+Molex 206994 15.4x6.4 (datasheet)  tab_x r90      114.03 x 64.68    14.03         0.00      59        cell foil      fail: TAB LENGTH: total L = 114.029 (worst case printed 114.371) > 100 + tab
+Molex 206994 15.4x6.4 (datasheet)  tab_x r0       110.50 x 64.68    10.50         0.00      33        camera         fail: TAB LENGTH: total L = 110.496 (worst case printed 110.827) > 100 + tab
+Molex 206994 15.4x6.4 (datasheet)  tab_y r0       98.60 x 76.08     0.00          6.08      9         XIAO           PASS
+Molex 206994 15.4x6.4 (datasheet)  tab_y r90      98.60 x 85.08     0.00          15.08     14        XIAO           fail: TAB WIDTH: total W = 85.08 (worst case printed 85.28) > 70 + tab_budge
+
