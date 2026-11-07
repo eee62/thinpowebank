@@ -1,0 +1,11 @@
+FPC 50x14x0.3 mm, bend radius 3 mm, on the inner surface of the lid / front wall / a side wall
+rules: >= 10 mm (3D) from the cell foil, >= 5 mm from every other metal part, board and wire lane
+body without the antenna in the board layer: 98.60 x 64.68 x 11.78 (worst-case printed limit 100 x 70: L <= 99.8, W <= 69.8)
+
+A) in the 70 x 100 body: best placement found: flat on the lid 50x14 at x 1.0 y 41.0
+   margin -5.00 mm (>= 0 passes), decided by lane2 -> FAIL
+
+B) smallest body that works (the +X and +Y walls move out; nothing else moves):
+   110.6 x 64.7 (area 7153): bent on the +X wall, 6.5 mm on the wall + R3 bend + 2.8 mm on the front wall, along 1..51
+   110.6 x 65.2 (area 7209): bent on the +X wall, 6.5 mm on the wall + R3 bend + 2.8 mm on the front wall, along 1..51
+   98.6 x 73.2 (area 7215): bent on the +Y wall, 6.5 mm on the wall + R3 bend + 2.8 mm on the lid, along 41..91

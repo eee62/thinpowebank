@@ -139,6 +139,25 @@ Each cell: **total outer L × W in mm** (T = 11.78 for all), and the extra over 
 - The cable is a straight-line lower bound, not a routed cable. The coax has to cross the opening in the main wall above the XIAO.
 - The tab was not printed and the antenna's RF behaviour was not measured.
 
+### FPC antenna on the inner surface of the lid or a wall (50 × 14 × 0.3 mm): FAIL in 70 × 100 × 12
+
+**Test.** A flexible adhesive FPC antenna, 50 × 14 × 0.3 mm, U.FL, lying flat on the INNER surface of the lid, the front wall or a side wall instead of in the board layer, optionally bent once around an edge (R3 mm, gentle). Every distance is checked in 3D against the real extents of each metal part: **10 mm from the cell foil, 5 mm from every other metal part, board and wire lane** (`tools/run_fpc_inner.py`; output in `check_results/c70_fpc_inner_r3.txt` and `_r5.txt`). The layout is the one with the antenna out of the board layer (switch above the camera, body 98.60 × 64.68). Ceramic 13 × 5 stays the fallback and the default.
+
+**Result: FAIL.** No flat or once-bent placement of a 50 × 14 strip clears the metal inside 98.6–99.8 × 69.8 (the worst-case-printed 100 × 70).
+- **Flat on the lid or the front wall: no 50 × 14 patch is free.** The lid and front wall are covered by the cell block (foil needs 10 mm), the two boards, the XIAO and the wire lanes. Every position touches a wire lane or a part (margin −5.0 mm at best, i.e. contact).
+- **Bent along the +Y wall (the best case): short by 2.9 mm at 69.8 wide.** The strip's 14 mm width is 6.5 mm on the wall, a 3 mm bend and 2.8 mm on the lid or front wall, along x 39–89. The **slide switch** (5 mm rule) blocks it. With the switch moved away, the **XIAO** blocks it: its board edge is 5 mm (3D) from the strip's flat part, so the +Y wall must be at least 72.55 mm out.
+- **Along the −X wall:** the bq25185 board sits 0.9 mm from the wall. **Along the +X wall:** the cell foil is 4 mm away and needs 10 (−9.0 mm). **Along the −Y wall:** the cell foil is 0.6 mm away (−10.0 mm).
+- **The 12 mm height does not help:** every part is nearly cavity-tall (cell 6.0 mm on 1.5 mm rails, boards and XIAO stack 8–9 mm), so the 3D distance is about the plan distance.
+
+**Smallest body that works** (the +X and +Y walls move out, nothing else moves; R3 bend; the answer for R5 is 1–2 mm bigger):
+
+| Body | Over 70 × 100 | Where the antenna goes |
+|---|---|---|
+| **98.6 × 73.2 × 11.78** | +3.2 mm width | along the +Y wall, x 41–91: 6.5 mm on the wall, R3 bend, 2.8 mm on the front wall or lid |
+| 110.6 × 64.7 × 11.78 (smaller area, 7153 mm²) | +10.6 mm length | along the +X wall, y 1–51: same bend, 6.5 mm on the wall |
+
+Neither fits 70 × 100. Compare with Plan B: the Molex-class antenna needs 100.20 × 70.36 and is far smaller. **Not modelled in the 3D model:** the bend itself, the strip's attachment and the plastic posts and ledges it would have to avoid; this is a clearance calculation. The camera on the short end face, one tact button on that face and no vents or slots were not applied (that message was not in my conversation); an end-face camera would also take the +X or −X wall.
+
 ### Parameters to change when you have real parts
 
 All are at the top of `powerbank70.scad`, in the section `PARTS YOU SWAP`. Change the numbers, run `openscad -o out.echo powerbank70.scad`, and the asserts name the dimension that fails. **The layout recomputes itself; nothing is moved by hand.**
@@ -191,6 +210,7 @@ Colours: silver = cell, royal blue = bq25185 (USB-C on the bottom edge), purple 
 | `enclosure/stl/c70_*.stl` | STLs for the default build (ceramic 13 × 5): body v2 / v1, plug (removable and permanent), covers A / B / C, button cap, fit coupon |
 | `enclosure/stl/c70_tab_*.stl` | **Unused.** The tab build (45 × 7 on the +Y side): body v2 / v1 (98.60 × 77.20 × 11.78), plug v2 removable / permanent, plug v1 removable. Covers, button cap and coupon are the default ones |
 | `enclosure/stl/c70_wifi_test.stl`, `c70_wifi_test_plug.stl` | **The Wi-Fi test piece**: shell and lid, bay sized for the Molex-class antenna (also holds the 13 × 5 ceramic) |
+| `enclosure/tools/run_fpc_inner.py` | Test of a flat FPC antenna on the inner surface of the lid or a wall (3D clearances, smallest body) |
 | `enclosure/tools/run_planb.py` | Plan B study: both orientations and both switch layouts, smallest outer size per antenna |
 | `enclosure/check_results/c70_planB_study.txt` | Output of the Plan B study, both styles |
 | `enclosure/tools/run_tab_study.py` | (Unused) the antenna tab study: every antenna, inside / +X tab / +Y tab, total size and pass or fail |
