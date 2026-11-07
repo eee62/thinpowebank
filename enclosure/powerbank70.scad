@@ -29,12 +29,15 @@ part = "assembled";
 style = "rounded";
 // "removable" = crush-rib friction plug (default here), "permanent" = epoxy-bonded
 plug_mode = "removable";
-// tactile button on the front face
+// ONE tactile button (on the short end face in this design)
 has_button = true;
-// slots in the walls beside the charger and the XIAO
-vents = true;
-// pressure-relief slots in the walls beside the cell
-cell_vents = true;
+// DESIGN v3: "end" = the camera and the button are on the +X short end face (lens axis horizontal when the box lies flat); "front" = old layout, large front face
+cam_face = "end";
+// the slide switch is removed in v3 (its code is kept; true brings it back in the old front-face layout)
+has_switch = false;
+// NO vents or slots in v3 (sealed shell). The old values were true / true.
+vents = false;
+cell_vents = false;
 // draw the reserved wire lanes / plug zones / finger columns / antenna keep-out in assembled views
 show_lanes = false;
 // fail (assert) when the outer size exceeds the hard limits below
@@ -48,7 +51,7 @@ $fn = 40;
 eps = 0.01;
 
 // ---------------- HARD LIMITS (yours) ----------------
-max_L = 100;  max_W = 70;  max_T = 12.0;
+max_L = 100;  max_W = 73.2;  max_T = 12.0;   // width relaxed to 73.2 by your decision (it was 70)
 
 // =============================================================================
 //  PARTS YOU SWAP. Every number here is a LISTING value: mark it "verified" only after you measure the real part.
@@ -62,17 +65,22 @@ cell_l = 50.0;           // length [mm] (listing max). Several 503450 / 603450 l
 cell_tol_pct = 0.05;     // pouch size tolerance (+-5 %). The swelling rule is checked at thickness x (1 + this)
 cell_lead_len = 100;     // wire length from the pouch to the JST-PH plug, from the listing [mm] (UNVERIFIED default)
 // ---- ANTENNA: 2.4 GHz, U.FL / IPEX cable ----
-ant_type = "ceramic";    // "ceramic" (small PCB / chip type) or "stick" (flat adhesive FPC). Only the label and the holder use it
-ant_l = 13;              // length [mm]. DEFAULT 13 x 5 ceramic: outer 98.60 x 68.96 x 11.78. 15.0 is the longest that still fits in 100 x 70
-ant_w = 5;               // width [mm]
-ant_t = 1.0;             // thickness [mm]  (flat FPC types are about 0.1-0.2)
-ant_cable_len = 100;     // U.FL cable length from the listing [mm] (must be >= the straight line from the XIAO's U.FL socket)
-// ---- ANTENNA PLACEMENT: THE TAB OPTIONS BELOW ARE UNUSED (the outer shape must stay a clean rectangle). Keep ant_place = "inside". ----
-ant_place = "inside";    // UNUSED OPTION. "inside" = in the main body (the only one used) | "tab_x" = in a separate tab on the +X (100 mm) end | "tab_y" = tab on the +Y (70 mm) side
+ant_type = "stick";       // "ceramic" (small PCB / chip type) or "stick" (flat adhesive FPC). Only the label and the holder use it
+ant_l = 50;              // length [mm]. DEFAULT v3: flexible adhesive FPC 50 x 14 x 0.3. FALLBACK: -D ant_place=\"inside\" -D ant_type=\"ceramic\" -D ant_l=13 -D ant_w=5 -D ant_t=1.0
+ant_w = 14;              // width [mm]
+ant_t = 0.3;             // thickness [mm]  (flat FPC types are about 0.1-0.3)
+ant_cable_len = 50;      // U.FL cable length from the listing [mm] (must be >= the straight line from the XIAO's U.FL socket)
+// ---- ANTENNA PLACEMENT. "wall_fpc" (DEFAULT v3) = flat FPC strip on the INNER surface of the +Y wall, bent once onto the front wall. "inside" = fallback (ceramic in the board layer). The tab options are UNUSED (the outer shape must stay a clean rectangle). ----
+ant_place = "wall_fpc";  // "wall_fpc" | "inside" = in the main body | "tab_x" = in a separate tab on the +X (100 mm) end | "tab_y" = tab on the +Y (70 mm) side
 ant_rot = 0;             // 0 = long side along X, 90 = long side along Y
 ant_tab_pos = -1;        // where the antenna sits along the tab edge (Y of its low edge for tab_x, X for tab_y). -1 = automatic best (smallest tab)
 smalls_place = "auto";   // switch + button: "auto" (corner beside the cell if it is free within max_L, else the band above the cell) | "corner" | "band"
 tab_budget = 10;         // most the tab may add beyond max_L / max_W [mm] (checked at the worst-case printed size)
+// ---- FPC strip on the +Y wall (ant_place = "wall_fpc") ----
+fpc_r  = 3.0;            // bend radius (gentle) of the single bend between the wall and the front wall
+fpc_a  = 6.5;            // width of the strip on the wall (from the end of the bend down)
+fpc_x0 = 41.5;           // strip starts here along X (5 mm from the wire lane at the XIAO block)
+fpc_W  = 73.0;           // body width for this build: 73.0 nominal = 73.2 worst case printed = your relaxed limit
 // ---- SLIDE SWITCH (default = SS-12D00-G3 from the Sofng drawing; replace with the Shopee switch) ----
 sw_l = 8.8;  sw_w = 3.9;  sw_h = 3.5;     // body: length (along the slide), width, height above the seat
 sw_handle = 1.5;                           // handle width
@@ -81,8 +89,8 @@ sw_travel = 2.0;                           // handle travel
 sw_pin_l = 3.5;                            // pin length below the body
 // ---- BUTTON: 6 x 6 tactile switch ----
 tact_w = 6.0;                              // body width (square)
-tact_body_h = 3.5;                         // body height
-tact_h = 5.0;                              // total height to the top of the plunger. YOUR RULE: <= 6.0
+tact_body_h = 4.3;                         // body height (your 6 x 6 mm tact, body 4.3 mm)
+tact_h = 5.5;                              // total height to the top of the plunger (body 4.3 + ASSUMED 1.2 plunger). YOUR RULE: <= 6.0
 tact_act_d = 3.5;                          // plunger diameter
 
 // =============================================================================
@@ -202,14 +210,14 @@ cam_block_h  = 5.0;      // back of head (incl. foam/stiffener) -> flat top of t
 cam_barrel_d = 6.7;      // lens barrel Ø above the block (Seeed: Ø6.7 opening in top foam)
 cam_barrel_h = 0.5;      // barrel height above the block (5.5 total - 5.0)
 cam_aperture_d = 3.0;    // clear front glass of the lens, ASSUMED
-cam_fov = 120;           // diagonal FOV of your wide-angle lens, ASSUMED (Seeed standard is 69)
+cam_fov = 69;            // diagonal FOV. v3: Seeed standard lens 69 deg. A 120 deg lens does NOT fit the end face (see README)
 cam_ribbon_w = 6.0;
 cam_plate_t  = 0.8;      // printed stop plate between the VCM top and the window disc
 cam_cradle_depth = 3.0;  // side walls that locate the head
 cam_cradle_wall  = 0.8;
 
 // Clear window disc (buy: acrylic or glass, Ø12 x 1.0)
-win_d = 12.0;  win_t = 1.0;  win_tol = 0.1;
+win_d = 7.0;   win_t = 1.0;  win_tol = 0.1;   // v3: 7 mm window disc (a 12 mm disc and its 14 mm ring do not fit a 9.78 mm cavity on the end face)
 win_lip = 0.8;           // front-wall rim the disc is glued against (retaining lip)
 win_recess_extra = 0.3;  // recess depth = disc + this (absorbs ±0.2 print and ±0.1 disc)
 win_ring_wall = 0.8;
@@ -296,9 +304,9 @@ H_xiao = xiao_wall_gap + xiao_h + ribbon_t + clr_z;
 H_cell = cell_rail_h + cell_t_hi + cell_swell + tol_small;
 H_bq   = bq_gap + bq_pcb_t + bq_jst_h + clr_z;
 H_mx   = mx_gap + mx_pcb_t + mx_jst_h + clr_z;
-H_cam  = (0.8 + pad_float) + cam_block_h + cam_plate_t + win_recess_extra + win_t;
-H_tact = has_button ? tact_leg_clear + tact_h + btn_gap + btn_flange_t + btn_free : 0;
-H_sw   = 0.3 + sw_pin_l + sw_h + sw_handle_h - sw_tip_proud - wall;
+H_cam  = cam_face == "end" ? cam_w + cam_tol + 2*fit_slide_bought : (0.8 + pad_float) + cam_block_h + cam_plate_t + win_recess_extra + win_t;
+H_tact = has_button && cam_face != "end" ? tact_leg_clear + tact_h + btn_gap + btn_flange_t + btn_free : 0;
+H_sw   = has_switch ? 0.3 + sw_pin_l + sw_h + sw_handle_h - sw_tip_proud - wall : 0;
 usb_boss_t = usb_well_d + usb_inner_wall;
 Hi = max(H_xiao, H_cell, H_bq, H_mx, H_cam, H_tact, H_sw);
 T  = plug_t + Hi + wall;
@@ -402,14 +410,23 @@ rib_half = cam_ribbon_w/2 + 0.2;                  // ribbon lane half-width
 y_cam_b = y_th + lane_t;
 cam_x = x_xr + ribbon_run + cam_blk/2;
 cam_y = y_cam_b + cam_blk/2;
-cam_jog = abs(cam_y - rib_y);
-tab_on = ant_place != "inside";
-a_ax = ant_rot == 0 ? ant_l : ant_w;              // antenna box size along X / Y after rotation
-a_ay = ant_rot == 0 ? ant_w : ant_l;
-v_ax = tab_on ? 0 : a_ax;                         // what the MAIN body has to hold (nothing, when the antenna is in a tab)
-v_ay = tab_on ? 0 : a_ay;
+cam_end = cam_face == "end";
+wall_on = ant_place == "wall_fpc";
+// end-face frame: the camera and button modules are written in the front-face frame (axis = +Z, wall at Zw..T). This maps that frame onto the
+// +X end wall: X = z + (L - T), Y = y + gy, Z = x + Zax. Local -x (the ribbon side) points to the lid.
+Zax = (Zi0 + Zw)/2;
+tact_gy = y_th + lane_t + tact_cradle/2;                          // button just above the cell block's band
+cam_gy  = tact_gy + tact_cradle/2 + 1.0 + max(cam_cradle_o, cam_ring_od)/2;   // 1.0 mm of air between the two plastic cradles
+cam_jog = cam_end ? abs(cam_gy - rib_y) : abs(cam_y - rib_y);
+tab_on = ant_place == "tab_x" || ant_place == "tab_y";
+a_ax = wall_on ? ant_l : (ant_rot == 0 ? ant_l : ant_w);              // antenna box size along X / Y after rotation
+fpc_b = ant_w - fpc_a - PI*fpc_r/2;               // width of the strip lying flat on the front wall
+fpc_plan_d = fpc_r + fpc_b;                       // how far the strip reaches from the +Y wall in plan
+a_ay = wall_on ? fpc_plan_d : (ant_rot == 0 ? ant_w : ant_l);
+v_ax = (tab_on || wall_on) ? 0 : a_ax;            // what the MAIN body has to hold (nothing, when the antenna is in a tab or on the wall)
+v_ay = (tab_on || wall_on) ? 0 : a_ay;
 x_a_in = x_xr + ant_keep;                         // inside the body: 5 mm from the XIAO block
-y_a_in = max(y_cam_b + cam_blk + ant_keep, rib_y + rib_half + ant_keep);   // 5 mm above the camera block AND the ribbon
+y_a_in = max(cam_end ? 0 : y_cam_b + cam_blk + ant_keep, rib_y + rib_half + ant_keep, cam_end ? cam_gy + rib_half + ant_keep : 0);   // 5 mm above the camera block AND the ribbon
 free_br = (max_L - wall) - 0.5 - x_cbr - lane_g;  // free width right of the cell block
 smalls_bottom = smalls_place == "corner" ? true : smalls_place == "band" ? false : free_br >= max(sw_cradle[0], tact_cradle);
 tact_x = smalls_bottom ? x_cbr + lane_g + tact_cradle/2 : cam_x + cam_blk/2 + lane_g + tact_cradle/2;
@@ -417,11 +434,12 @@ tact_y = smalls_bottom ? y_cell0 + 1.0 + tact_cradle/2 : y_cam_b + tact_cradle/2
 sw_x = smalls_bottom ? x_cbr + lane_g + sw_cradle[0]/2 : tab_on ? cam_x : x_a_in + v_ax + ant_keep + sw_cradle[0]/2;   // antenna in a tab: switch goes above the camera
 sw_y = smalls_bottom ? tact_y + tact_cradle/2 + lane_g + sw_cradle[1]/2 : tab_on ? y_cam_b + cam_blk + lane_g + sw_cradle[1]/2 : y_a_in + sw_cradle[1]/2;
 
-right_extent = max(x_cbr + 0.5, x_a_in + v_ax + ant_wall_gap, cam_x + cam_blk/2 + 0.5,
-                   tact_x + tact_cradle/2 + 0.5, sw_x + sw_cradle[0]/2 + 0.5);
-top_extent   = max(P_len + 0.5, y_tb + XB_h, y_a_in + v_ay + ant_wall_gap, sw_y + sw_cradle[1]/2 + 0.5);
+right_extent = max(x_cbr + 0.5, x_a_in + v_ax + ant_wall_gap, cam_end ? 0 : cam_x + cam_blk/2 + 0.5,
+                   cam_end ? 0 : tact_x + tact_cradle/2 + 0.5, has_switch ? sw_x + sw_cradle[0]/2 + 0.5 : 0);
+top_extent   = max(P_len + 0.5, y_tb + XB_h, y_a_in + v_ay + ant_wall_gap, has_switch ? sw_y + sw_cradle[1]/2 + 0.5 : 0,
+                   cam_end ? cam_gy + max(cam_cradle_o, cam_ring_od)/2 + 0.5 : 0);
 L  = right_extent + wall;
-W  = top_extent + wall;
+W  = max(top_extent + wall, wall_on ? max(fpc_W, Yx0 + xiao_pcb_w + ant_keep + fpc_plan_d + wall) : 0);   // the strip must stay 5 mm above the XIAO board edge: the body width follows the XIAO
 Li = L - 2*wall;
 Wi = W - 2*wall;
 y0 = wall;
@@ -437,9 +455,11 @@ ant_metals = concat(
     [[x_pr - (p_y_mx0 + mx_l), p_x_mx0, x_pr - p_y_mx0, p_x_mx0 + mx_d, ant_keep, "MAX17048"]],
     [for (z = P_zone_list()) let(b = pm3(z[0], z[1])) [b[0], b[1], b[3], b[4], ant_keep, "JST plug zone"]],
     [[Xx0 - xiao_usb_over, Yx0, xiao_far, Yx0 + xiao_pcb_w, ant_keep, "XIAO"]],
-    [[cam_x - cam_blk/2, cam_y - cam_blk/2, cam_x + cam_blk/2, cam_y + cam_blk/2, ant_keep, "camera"]],
-    [[sw_x - sw_l/2, sw_y - sw_w/2, sw_x + sw_l/2, sw_y + sw_w/2, ant_keep, "slide switch"]],
-    has_button ? [[tact_x - tact_w/2, tact_y - tact_w/2, tact_x + tact_w/2, tact_y + tact_w/2, ant_keep, "button"]] : [],
+    cam_end ? [[L - T + Zcam0, cam_gy - cam_w/2, L - wall, cam_gy + cam_w/2, ant_keep, "camera"]]
+            : [[cam_x - cam_blk/2, cam_y - cam_blk/2, cam_x + cam_blk/2, cam_y + cam_blk/2, ant_keep, "camera"]],
+    has_switch ? [[sw_x - sw_l/2, sw_y - sw_w/2, sw_x + sw_l/2, sw_y + sw_w/2, ant_keep, "slide switch"]] : [],
+    !has_button ? [] : cam_end ? [[L - T + Ztb, tact_gy - tact_w/2, L - wall, tact_gy + tact_w/2, ant_keep, "button"]]
+                : [[tact_x - tact_w/2, tact_y - tact_w/2, tact_x + tact_w/2, tact_y + tact_w/2, ant_keep, "button"]],
     [for (b = lane_boxes()) [b[0], b[1], b[3], b[4], ant_keep, "wire lane"]]);
 function cands(lo, hi) = hi >= lo ? [for (p = [lo : 0.5 : hi]) p] : [];
 function hit_x(m, ya) = ya - m[4] < m[3] - eps && ya + a_ay + m[4] > m[1] + eps;     // keep-out box overlaps the metal in Y
@@ -456,8 +476,8 @@ tab_nx = [for (y = tab_yc) need_x(y)];
 tab_ny = [for (x = tab_xc) need_y(x)];
 tab_ya = ant_tab_pos >= 0 ? ant_tab_pos : (len(tab_yc) > 0 ? tab_yc[search(min(tab_nx), tab_nx)[0]] : 0);
 tab_xa = ant_tab_pos >= 0 ? ant_tab_pos : (len(tab_xc) > 0 ? tab_xc[search(min(tab_ny), tab_ny)[0]] : 0);
-x_a = !tab_on ? x_a_in : ant_place == "tab_x" ? need_x(tab_ya) : tab_xa;
-y_a = !tab_on ? y_a_in : ant_place == "tab_x" ? tab_ya : need_y(tab_xa);
+x_a = wall_on ? fpc_x0 : !tab_on ? x_a_in : ant_place == "tab_x" ? need_x(tab_ya) : tab_xa;
+y_a = wall_on ? W - wall - fpc_plan_d : !tab_on ? y_a_in : ant_place == "tab_x" ? tab_ya : need_y(tab_xa);
 tab_xe = x_a + a_ax + ant_wall_gap + wall;        // outer end of a +X tab
 tab_ye = y_a + a_ay + ant_wall_gap + wall;        // outer end of a +Y tab
 tab_x_on = ant_place == "tab_x" && tab_xe > L + eps;
@@ -490,7 +510,7 @@ ufl_pt = [Xx0 + 19.234, xy_v(4.163), Zxb - 1.875];
 ant_cable_min = norm([max(x_a - ufl_pt[0], 0, ufl_pt[0] - (x_a + a_ax)),
                       max(y_a - ufl_pt[1], 0, ufl_pt[1] - (y_a + a_ay)),
                       max(Zab - ufl_pt[2], 0, ufl_pt[2] - (Zab + ant_t))]);
-assert(ant_cable_len >= ant_cable_min, str("ANTENNA CABLE: the straight line from the XIAO U.FL socket to the antenna is ", ant_cable_min, " mm, the listing cable is only ", ant_cable_len, " mm"));
+assert(wall_on || ant_cable_len >= ant_cable_min, str("ANTENNA CABLE: the straight line from the XIAO U.FL socket to the antenna is ", ant_cable_min, " mm, the listing cable is only ", ant_cable_len, " mm"));
 assert(wall - tol_small >= min_wall, "outer wall below the 0.8 mm minimum after tolerance");
 assert(plug_t - tol_small >= min_wall, "plug below the 0.8 mm minimum after tolerance");
 assert(tact_h <= 6.0, "BUTTON RULE: tact_h must be <= 6.0 mm");
@@ -506,8 +526,8 @@ assert(!tab_on || ant_tab_pos < 0 || (ant_place == "tab_x" ? ant_tab_pos >= 0 : 
 assert(Zw - (Zc + cell_t_hi) - tol_small >= cell_swell - eps, "SWELL RULE: less than 0.8 mm above the cell at +5 % thickness");
 assert(H_cell <= Hi + eps, "cell too thick for the thickness budget");
 assert(cell_dist_ant >= ant_cell_clear - eps, str("ANTENNA RULE: antenna is only ", cell_dist_ant, " mm from the cell foil (need ", ant_cell_clear, ")"));
-assert(Zab - Zi0 >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the plug");
-assert(Zw - (Zab + ant_t) >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the front wall (antenna too thick)");
+assert(wall_on || Zab - Zi0 >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the plug");
+assert(wall_on || Zw - (Zab + ant_t) >= ant_wall_gap - eps, "antenna closer than ant_wall_gap to the front wall (antenna too thick)");
 assert(cam_jog <= 8.0 + eps, str("RIBBON: camera sideways jog ", cam_jog, " > 8 mm"));
 assert(cam_jog <= 2.0 + eps || ribbon_run >= 9.0 - eps, "RIBBON: a jog needs ribbon_run >= 9 mm");
 assert(lens_r_in >= lens_r_req_in, str("lens opening clips the FOV: need r ", lens_r_req_in, " have ", lens_r_in, ". Max FOV here = ", fov_max));
@@ -517,6 +537,18 @@ assert(sw_boss_t >= wall, "switch handle too short for this wall: lower sw_tip_p
 assert(sw_boss_t - sw_scoop_d - tol_small >= min_wall - eps, "wall under the switch scoop too thin");
 assert(Zsw_bot - sw_pin_l - Zi0 >= 0.3 - eps, "switch pins hit the plug: trim pins / lower sw_pin_l");
 assert(!has_button || (Zw - btn_flange_t - btn_free) - (Ztt + btn_gap) >= -eps, "tact switch too tall for this thickness");
+// ---- v3 checks: FPC strip on the wall, camera and button on the short end face
+fpc_feed = [x_a, y_a + fpc_plan_d/2, Zw - ant_t];                    // feed end of the strip (the end nearest the XIAO)
+fpc_route = abs(fpc_feed[0] - ufl_pt[0]) + abs(fpc_feed[1] - ufl_pt[1]) + abs(fpc_feed[2] - ufl_pt[2]);   // Manhattan route from the XIAO U.FL socket
+assert(!wall_on || ant_cable_len >= fpc_route, str("FPC CABLE: the route from the XIAO U.FL socket to the strip's feed is about ", fpc_route, " mm, the cable is only ", ant_cable_len));
+assert(!wall_on || fpc_b >= 0, "FPC: the strip is too narrow for this bend radius and wall width (fpc_b < 0)");
+assert(!wall_on || fpc_a + fpc_r <= Zw - Zi0 + eps, "FPC: strip + bend taller than the wall");
+assert(!wall_on || x_a + ant_l <= L - wall - 1, "FPC: the strip runs past the end wall");
+assert(!cam_end || cam_ring_od <= Zw - Zi0 + eps, str("CAMERA ON THE END FACE: the window ring (", cam_ring_od, " mm) does not fit the ", Zw - Zi0, " mm cavity height: use a smaller window disc"));
+assert(!cam_end || cam_pocket + 0.4 <= Zw - Zi0 + eps, str("CAMERA ON THE END FACE: the head pocket (", cam_pocket, " mm) leaves less than 0.2 mm each side in the cavity"));
+assert(!cam_end || 2*lens_r_out + 0.8 <= T - edge_r_front - edge_r_back, str("CAMERA ON THE END FACE: the lens opening (", 2*lens_r_out, " mm) does not fit the flat part of the end face (", T - edge_r_front - edge_r_back, " mm)"));
+assert(!cam_end || tact_cradle <= Zw - Zi0 + eps, "BUTTON ON THE END FACE: the button cradle does not fit the cavity height");
+assert(!cam_end || L - T + Zcam0 >= x_xr + ribbon_run - eps, "CAMERA ON THE END FACE: not enough room behind the XIAO for the ribbon run");
 assert(usb_z - usb_well_h/2 - Zi0 >= 0.8, "web under the USB well < 0.8");
 assert(gap12 >= ribbon_bay, "row gap too small for the ribbon fold");
 assert(ph_gap_mouth >= 2*ph_hsg_len - eps, "gap shorter than both JST-PH housings fully withdrawn");
@@ -541,6 +573,8 @@ echo(str("Antenna cable: straight line from the XIAO U.FL socket to the antenna 
 echo(str("Antenna: ", cell_dist_ant, " mm from the cell foil (rule 10); ", ant_keep, " mm keep-out from other metal; ", Zab - Zi0, " mm to the plug, ", Zw - Zab - ant_t, " mm to the front wall"));
 echo(str("JST-PH gap in P: mouth-to-mouth ", ph_gap_mouth, " (jumper offset ", jump_d, ") -> gap ", gap12, ". Cell leads needed about ", cell_lead_need, " mm; listing says ", cell_lead_len, " mm: ",
          cell_lead_len >= cell_lead_need ? "OK" : "TOO SHORT, add a JST-PH pigtail"));
+echo(str("v3: camera and button on the ", cam_end ? "+X short end face (camera Y " : "front face (camera Y ", cam_end ? cam_gy : cam_y, ", button Y ", cam_end ? tact_gy : tact_y, "); window disc ", win_d, " mm, lens opening ", 2*lens_r_in, " -> ", 2*lens_r_out, " mm, FOV ", cam_fov, " (max here ", fov_max, "); slide switch ", has_switch ? "fitted" : "removed", "; vents ", vents || cell_vents ? "yes" : "none"));
+if (wall_on) echo(str("FPC strip on the +Y wall: x ", x_a, "..", x_a + ant_l, ", ", fpc_a, " mm on the wall + R", fpc_r, " bend + ", fpc_b, " mm on the front wall; cable route about ", fpc_route, " of ", ant_cable_len, " mm"));
 echo(str("Ribbon: camera jog ", cam_jog, " mm over a run of ", ribbon_run, " mm (not simulated)"));
 echo(str("Plug fit per side: X ", plug_fx, "  Y ", plug_fy));
 
@@ -566,6 +600,29 @@ module corner_profile(R, H, ef, eb) {    // (r, z) profile of one rounded corner
         if (ef > eps) translate([R - ef, H - ef]) circle(r = ef); else translate([R - eps, H - eps]) square([eps, eps]);
     }
 }
+
+// =============================================================================
+//  END-FACE FRAME (v3): the camera and button modules are written in the front-face frame; this maps them onto the +X end wall
+// =============================================================================
+module end_frame(gy) multmatrix([[0, 0, 1, L - T], [0, 1, 0, gy], [1, 0, 0, Zax], [0, 0, 0, 1]]) children();
+module cam_frame() { if (cam_end) end_frame(cam_gy) children(); else children(); }
+module tact_frame() { if (cam_end) end_frame(tact_gy) children(); else children(); }
+cam_lx = cam_end ? 0 : cam_x;   cam_ly = cam_end ? 0 : cam_y;       // local origin = the lens axis
+tact_lx = cam_end ? 0 : tact_x; tact_ly = cam_end ? 0 : tact_y;
+
+// =============================================================================
+//  FPC STRIP ON THE +Y WALL: wall part, one bend of radius fpc_r, flat part on the front wall. Antenna and the plastic fillet share the same arc points.
+// =============================================================================
+fpc_n = 24;
+fpc_y1 = W - wall;                                                   // inner face of the +Y wall
+function fpc_arc(rad, k) = [fpc_y1 - fpc_r + rad*cos(90*k/fpc_n), Zw - fpc_r + rad*sin(90*k/fpc_n)];   // (Y, Z); k = 0 on the wall, k = fpc_n on the front wall
+module fpc_dummy() translate([x_a, 0, 0]) rotate([90, 0, 90]) linear_extrude(ant_l) polygon(concat(
+    [[fpc_y1 - ant_t, Zw - fpc_r - fpc_a], [fpc_y1, Zw - fpc_r - fpc_a]],
+    [for (k = [0 : fpc_n]) fpc_arc(fpc_r, k)],
+    [[fpc_y1 - fpc_r - fpc_b, Zw], [fpc_y1 - fpc_r - fpc_b, Zw - ant_t]],
+    [for (k = [fpc_n : -1 : 0]) fpc_arc(fpc_r - ant_t, k)]));
+module fpc_fillet() translate([x_a, 0, 0]) rotate([90, 0, 90]) linear_extrude(ant_l) polygon(concat(
+    [[fpc_y1, Zw]], [for (k = [fpc_n : -1 : 0]) fpc_arc(fpc_r, k)]));
 
 // =============================================================================
 //  OUTER SHELL AND CAVITY
@@ -635,21 +692,22 @@ module xiao_posts() {
     for (vv = [[2.0, 3.6], [14.18, 15.78]])
         bx([xiao_far + 0.1, xy_v(vv[1]), zb], [xiao_far + 0.1 + xpost, xy_v(vv[0]), Zw + eps]);
 }
-module camera_bezel() {
-    translate([cam_x, cam_y, 0]) {
+module camera_bezel() cam_frame() {
+    cw = cam_end ? min(cam_cradle_o, Zw - Zi0) : cam_cradle_o;       // on the end face the cradle is as tall as the cavity, no more
+    translate([cam_lx, cam_ly, 0]) {
         // ring that locates the disc (disc glued to the front-wall lip)
         translate([0, 0, Zplate_bot]) cylinder(d = cam_ring_od, h = Zw - Zplate_bot + eps);
         // cradle around the head
-        translate([-cam_cradle_o/2, -cam_cradle_o/2, Zplate_bot - cam_cradle_depth])
-            cube([cam_cradle_o, cam_cradle_o, cam_cradle_depth + eps]);
+        translate([-cw/2, -cam_cradle_o/2, Zplate_bot - cam_cradle_depth])
+            cube([cw, cam_cradle_o, cam_cradle_depth + eps]);
     }
 }
-module switch_boss() {
+module switch_boss() if (has_switch) {
     cbox([sw_x, sw_y, Zsw_top], [sw_cradle[0], sw_cradle[1], Zw - Zsw_top + eps]);
     cbox([sw_x, sw_y, Zsw_bot + 1.0], [sw_cradle[0], sw_cradle[1], Zsw_top - Zsw_bot - 1.0 + eps]);
 }
-module tact_cradle_solid() {
-    cbox([tact_x, tact_y, Ztb + 1.0], [tact_cradle, tact_cradle, Zw - Ztb - 1.0 + eps]);
+module tact_cradle_solid() tact_frame() {
+    cbox([tact_lx, tact_ly, Ztb + 1.0], [tact_cradle, tact_cradle, Zw - Ztb - 1.0 + eps]);
 }
 module cell_stops() {
     for (yy = [y_cellb + 1.75, y_cellb + cell_w - 1.75])
@@ -658,15 +716,15 @@ module cell_stops() {
 
 // antenna holder: a plastic frame at mid-height hangs from the front wall on two posts. The antenna's adhesive back sticks to
 // the rim, so its radiating area is over an open window and it is >= ant_wall_gap from the walls (Seeed staff advice).
-module ant_holder(xa = x_a, ya = y_a) {
+module ant_holder(xa = x_a, ya = y_a, ax = a_ax, ay = a_ay) {
     px = ant_wall_gap - 0.5; py = 1.0;                                   // plate overhang beyond the antenna: ends / sides
-    win = [max(0, a_ax - 2*ant_rim), max(0, a_ay - 2*ant_rim)];
+    win = [max(0, ax - 2*ant_rim), max(0, ay - 2*ant_rim)];
     translate([0, 0, Zab - carrier_t]) linear_extrude(carrier_t) difference() {
-        translate([xa - px, ya - py]) square([a_ax + 2*px, a_ay + 2*py]);
+        translate([xa - px, ya - py]) square([ax + 2*px, ay + 2*py]);
         if (win[0] > 0 && win[1] > 0) translate([xa + ant_rim, ya + ant_rim]) square(win);
     }
-    for (xx = [xa - px + 1.0, xa + a_ax + px - 1.0])
-        translate([xx, ya + a_ay/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
+    for (xx = [xa - px + 1.0, xa + ax + px - 1.0])
+        translate([xx, ya + ay/2, Zab - carrier_t]) cylinder(d = strain_post_d, h = Zw - (Zab - carrier_t) + eps);
 }
 // strain relief, site A: two tie posts flank the cell leads at the lead zone
 module anchors_cell() for (dy = [-4.5, 4.5])
@@ -678,7 +736,7 @@ module ledges() {
         bx([wall - eps, y - ledge_len/2, Zi0], [wall + ledge_d, y + ledge_len/2, Zi0 + ledge_h]);
     for (y = [y_cell0 + 8, y_th - 8]) if (!(tab_x_on && y + ledge_len/2 > tab_c[1] - 1 && y - ledge_len/2 < tab_c[3] + 1))   // none where the tab opens the wall
         bx([L - wall - ledge_d, y - ledge_len/2, Zi0], [L - wall + eps, y + ledge_len/2, Zi0 + ledge_h]);
-    for (x = [x_x + 6, x_xr - 6]) if (!(tab_y_on && x + ledge_len/2 > tab_c[0] - 1 && x - ledge_len/2 < tab_c[2] + 1))
+    for (x = [x_x + 6, x_xr - 6]) if (!wall_on) if (!(tab_y_on && x + ledge_len/2 > tab_c[0] - 1 && x - ledge_len/2 < tab_c[2] + 1))
         bx([x - ledge_len/2, W - wall - ledge_d, Zi0], [x + ledge_len/2, W - wall + eps, Zi0 + ledge_h]);
 }
 module internal_features() {
@@ -689,14 +747,15 @@ module internal_features() {
     if (has_button) tact_cradle_solid();
     cell_stops();
     anchors_cell();
-    ant_holder();
+    if (!wall_on) ant_holder();
+    if (wall_on) fpc_fillet();
     ledges();
 }
 
 // =============================================================================
 //  CUTS
 // =============================================================================
-module lens_cuts() translate([cam_x, cam_y, 0]) {
+module lens_cuts() cam_frame() translate([cam_lx, cam_ly, 0]) {
     translate([0, 0, Zw - eps]) cylinder(r1 = lens_r_in, r2 = lens_r_out, h = wall + 2*eps);
     translate([0, 0, Zplate_top]) cylinder(d = win_pocket_d, h = Zw - Zplate_top + eps);
     translate([0, 0, Zplate_bot - eps]) cylinder(d = cam_barrel_d + cam_tol + 2*fit_slide_bought, h = cam_plate_t + 2*eps);
@@ -705,17 +764,17 @@ module lens_cuts() translate([cam_x, cam_y, 0]) {
     translate([-cam_pocket/2 - cam_cradle_wall - 1 + eps, -(cam_ribbon_w + lane_spare)/2, Zplate_bot - cam_cradle_depth - 1])
         cube([cam_cradle_wall + 1, cam_ribbon_w + lane_spare, cam_cradle_depth + 1]);
 }
-module switch_cuts() {
+module switch_cuts() if (has_switch) {
     slot = [sw_travel + sw_handle + 2*tol_hole, sw_handle + 2*tol_hole];
     translate([sw_x - slot[0]/2, sw_y - slot[1]/2, Zsw_top - eps]) cube([slot[0], slot[1], T]);
     translate([sw_x, sw_y, T - sw_scoop_d]) linear_extrude(1)
         offset(r = 1.2) square([slot[0] + 2*2.0 - 2.4, slot[1] + 2*1.4 - 2.4], center = true);
     cbox([sw_x, sw_y, Zsw_bot - 1], [sw_l + sw_tol + 2*fit_slide_bought, sw_w + sw_tol + 2*fit_slide_bought, Zsw_top - Zsw_bot + 1]);
 }
-module button_cuts() if (has_button) {
-    translate([tact_x, tact_y, Zw - eps]) cylinder(d = btn_d + 2*fit_pp_hole, h = wall + 1);
-    translate([tact_x, tact_y, Zw - btn_flange_t - btn_free]) cylinder(d = btn_cbore_d, h = btn_flange_t + btn_free + eps);
-    cbox([tact_x, tact_y, Ztb], [tact_pocket, tact_pocket, Zw - btn_flange_t - btn_free - Ztb + eps]);
+module button_cuts() if (has_button) tact_frame() {
+    translate([tact_lx, tact_ly, Zw - eps]) cylinder(d = btn_d + 2*fit_pp_hole, h = wall + 1);
+    translate([tact_lx, tact_ly, Zw - btn_flange_t - btn_free]) cylinder(d = btn_cbore_d, h = btn_flange_t + btn_free + eps);
+    cbox([tact_lx, tact_ly, Ztb], [tact_pocket, tact_pocket, Zw - btn_flange_t - btn_free - Ztb + eps]);
 }
 module vent_cuts() {
     vz = T/2 - vent_h/2;
@@ -788,9 +847,9 @@ module plug_features() {
         for (p = [[12.7, 2.5], [12.7, 15.5]]) cbox(concat(mx_place_xy(p), Zi0 - eps), [3, 3, mx_gap - pad_float + eps]);
     }
     for (vv = [2.0, 15.78]) cbox([Xx0 + 13.65, xy_v(vv), Zi0 - eps], [2.2, 2.0, (Zxb - 5.43) - pad_float - Zi0 + eps]);
-    cbox([cam_x + 1.5, cam_y, Zi0 - eps], [4, 4, Zcam0 - pad_float - Zi0 + eps]);       // camera backstop (away from the ribbon side)
-    for (s = [-1, 1]) cbox([sw_x + s*(sw_l/2 - 0.6), sw_y, Zi0 - eps], [1.0, 2.5, Zsw_bot - pad_float - Zi0 + eps]);
-    if (has_button) cbox([tact_x, tact_y, Zi0 - eps], [2.5, 2.5, Ztb - pad_float - Zi0 + eps]);
+    if (!cam_end) cbox([cam_x + 1.5, cam_y, Zi0 - eps], [4, 4, Zcam0 - pad_float - Zi0 + eps]);       // camera backstop (away from the ribbon side); on the end face the cradle holds the head
+    if (has_switch) for (s = [-1, 1]) cbox([sw_x + s*(sw_l/2 - 0.6), sw_y, Zi0 - eps], [1.0, 2.5, Zsw_bot - pad_float - Zi0 + eps]);
+    if (has_button && !cam_end) cbox([tact_x, tact_y, Zi0 - eps], [2.5, 2.5, Ztb - pad_float - Zi0 + eps]);
 }
 
 // =============================================================================
@@ -827,7 +886,7 @@ module button_cap() {
         cylinder(d = btn_d - 0.6, h = wall + btn_proud);
     }
 }
-module button_cap_placed() translate([tact_x, tact_y, Ztt + btn_gap]) button_cap();
+module button_cap_placed() tact_frame() translate([tact_lx, tact_ly, Ztt + btn_gap]) button_cap();
 
 // =============================================================================
 //  COMPONENT DUMMIES
@@ -873,23 +932,24 @@ module mx_local() {
     }
 }
 module mx_dummy() P_T() translate([p_x_mx0 + mx_d, p_y_mx0, Zmx]) rotate(90) mx_local();
-module camera_dummy() translate([cam_x, cam_y, 0]) {
+module camera_dummy() cam_frame() translate([cam_lx, cam_ly, 0]) {
     cbox([0, 0, Zcam0], [cam_w, cam_d, cam_block_h]);
     translate([0, 0, Zcam0 + cam_block_h - eps]) cylinder(d = cam_barrel_d, h = cam_barrel_h + eps);
-    translate([-cam_w/2 - 3 + eps, -cam_ribbon_w/2, Zcam0]) cube([3, cam_ribbon_w, ribbon_t]);   // ribbon stub, -X side
+    stub = cam_end ? Zax - cam_w/2 - Zi0 - 0.2 : 3;   // on the end face the stub only reaches down to the lid
+    translate([-cam_w/2 - stub + eps, -cam_ribbon_w/2, Zcam0]) cube([stub, cam_ribbon_w, ribbon_t]);   // ribbon stub, -X side (towards the lid on the end face)
 }
-module window_dummy() translate([cam_x, cam_y, Zw - win_t]) cylinder(d = win_d, h = win_t);
-module switch_dummy() {
+module window_dummy() cam_frame() translate([cam_lx, cam_ly, Zw - win_t]) cylinder(d = win_d, h = win_t);
+module switch_dummy() if (has_switch) {
     cbox([sw_x, sw_y, Zsw_bot], [sw_l, sw_w, sw_h]);
     cbox([sw_x, sw_y, Zsw_top - eps], [sw_travel + sw_handle, sw_handle, sw_handle_h + eps]);
     for (dx = [-2.5, 0, 2.5]) cbox([sw_x + dx, sw_y, Zsw_bot - sw_pin_l], [0.5, 0.3, sw_pin_l + eps]);
 }
-module tact_dummy() if (has_button) {
-    cbox([tact_x, tact_y, Ztb], [tact_w, tact_w, tact_body_h]);
-    translate([tact_x, tact_y, Ztb + tact_body_h - eps]) cylinder(d = tact_act_d, h = tact_h - tact_body_h + eps);
-    for (sx = [-1, 1], sy = [-1, 1]) cbox([tact_x + sx*3.25, tact_y + sy*2.25, Ztb - (tact_leg_clear - 0.2)], [0.7, 0.3, tact_leg_clear - 0.2 + eps]);
+module tact_dummy() if (has_button) tact_frame() {
+    cbox([tact_lx, tact_ly, Ztb], [tact_w, tact_w, tact_body_h]);
+    translate([tact_lx, tact_ly, Ztb + tact_body_h - eps]) cylinder(d = tact_act_d, h = tact_h - tact_body_h + eps);
+    for (sx = [-1, 1], sy = [-1, 1]) cbox([tact_lx + sx*3.25, tact_ly + sy*2.25, Ztb - (tact_leg_clear - 0.2)], [0.7, 0.3, tact_leg_clear - 0.2 + eps]);
 }
-module antenna_dummy() translate([x_a, y_a, Zab]) cube([a_ax, a_ay, ant_t]);
+module antenna_dummy() { if (wall_on) fpc_dummy(); else translate([x_a, y_a, Zab]) cube([a_ax, a_ay, ant_t]); }
 
 // RULE: no other metal within ant_keep of the antenna (full cavity height); the cell foil needs ant_cell_clear
 module antenna_keepout() bx([x_a - ant_keep, y_a - ant_keep, Zi0], [x_a + a_ax + ant_keep, y_a + a_ay + ant_keep, Zw]);
@@ -943,7 +1003,8 @@ function lane_boxes() = let(zt = Zw - eps, zl = Zi0 + eps) [
     [x_pr + eps, y_th + eps, zl, right_extent - 0.5, y_cam_b - eps, zt],
     // camera ribbon: under the flipped XIAO stack, then the run and the jog to the camera port
     [Xx0 + 15.1, rib_y - rib_half, zl, x_xr - eps, rib_y + rib_half, Zxs - eps],
-    [x_xr, min(rib_y, cam_y) - rib_half, zl, cam_x - cam_w/2 - 3.0 - eps, max(rib_y, cam_y) + rib_half, zt],   // ends where the ribbon stub (in the camera model) begins
+    cam_end ? [x_xr, min(rib_y, cam_gy) - rib_half, zl, L - T + Zcam0 - eps, max(rib_y, cam_gy) + rib_half, zt]
+            : [x_xr, min(rib_y, cam_y) - rib_half, zl, cam_x - cam_w/2 - 3.0 - eps, max(rib_y, cam_y) + rib_half, zt],   // ends where the ribbon stub (in the camera model) begins
     // NTC channel under the cell, between the rails
     [x_cell + eps, cell_cy - 1.0, zl, x_cellb + ntc_from_lead_end - ntc_l/2 - 0.8, cell_cy + 1.0, Zc - eps]
 ];
@@ -956,14 +1017,15 @@ module lanes() for (b = lane_boxes()) bx([b[0], b[1], b[2]], [b[3], b[4], b[5]])
 //  antenna you want the bay sized for:  -D ant_l=15.4 -D ant_w=6.4 -D ant_t=0.15  (Molex-class), which also takes the 13 x 5 ceramic.
 // =============================================================================
 wt_x0 = x_x - 3;  wt_y0 = y_th;                                   // lower left corner of the piece (outer)
-wt_x1 = x_a_in + a_ax + ant_wall_gap + wall;  wt_y1 = y_a_in + a_ay + ant_wall_gap + wall;   // always the in-body slot (independent of the unused tab)
+wt_ax = wall_on ? 15.4 : a_ax;  wt_ay = wall_on ? 6.4 : a_ay;      // the test bay is sized for the Molex-class stick-on (also takes the 13 x 5 ceramic)
+wt_x1 = x_a_in + wt_ax + ant_wall_gap + wall;  wt_y1 = y_a_in + wt_ay + ant_wall_gap + wall;   // always the in-body slot (independent of the unused tab)
 wt_fx = tol(wt_x1 - wt_x0 - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
 wt_fy = tol(wt_y1 - wt_y0 - 2*wall) + (plug_mode == "permanent" ? glue_film : 0);
 module wifi_cavity_2d() translate([wt_x0 + wall, wt_y0 + wall]) rrect([wt_x1 - wt_x0 - 2*wall, wt_y1 - wt_y0 - 2*wall], Ri);
 module wifi_test() difference() {
     union() {
         difference() { rect_solid(wt_x0, wt_y0, wt_x1, wt_y1); translate([0, 0, -1]) linear_extrude(Zw + 1) wifi_cavity_2d(); }
-        intersection() { translate([0, 0, Zi0]) linear_extrude(Zw - Zi0 + eps) wifi_cavity_2d(); union() { xiao_posts(); ant_holder(x_a_in, y_a_in); } }
+        intersection() { translate([0, 0, Zi0]) linear_extrude(Zw - Zi0 + eps) wifi_cavity_2d(); union() { xiao_posts(); ant_holder(x_a_in, y_a_in, wt_ax, wt_ay); } }
     }
     // opening in the left wall for the XIAO's USB-C cable (power and flashing during the test)
     translate([wt_x0 - 1, xy_v(8.882), Zxb - 2.36]) rotate([90, 0, 90]) linear_extrude(wall + 2) stadium(usb_well_w, usb_well_h);
@@ -1068,7 +1130,7 @@ module obj(n) {
     else if (n == "tab_cavity") tab_cavity();
     else if (n == "wifi_shell") { if (!tab_on) wifi_test(); }                       // the test piece belongs to the in-body slot
     else if (n == "wifi_plug") { if (!tab_on) wifi_test_plug(ribs = false); }
-    else if (n == "wifi_antenna") { if (!tab_on) translate([x_a_in, y_a_in, Zab]) cube([a_ax, a_ay, ant_t]); }
+    else if (n == "wifi_antenna") { if (!tab_on) translate([x_a_in, y_a_in, Zab]) cube([wt_ax, wt_ay, ant_t]); }
 }
 module debug_view() {
     if (debug_pair >= 0) {

@@ -1,8 +1,116 @@
 # Thin desk power bank: enclosure (OpenSCAD)
 
-**Two models live here.** The **compact 70 × 100 × 12 mm** version (`powerbank70.scad`, the current request) is first. The **full-capacity** version (635085 cell, `powerbank.scad`, 187.1 mm long) follows from "Full-capacity version" and is unchanged apart from one corrected figure in section 5 (the fit coupon size).
+**Three models live here.** **Design v3 (current)** is first: the 50 × 14 mm FPC antenna on the +Y wall, camera and one button on the short end face, sealed. The older compact v2 follows (verified at commit `74ed060`; the model has changed since, so its numbers belong to that commit, and the v2 STLs are in `stl/v2/`). **Two models live here.** The **compact 70 × 100 × 12 mm** version (`powerbank70.scad`, the current request) is first. The **full-capacity** version (635085 cell, `powerbank.scad`, 187.1 mm long) follows from "Full-capacity version" and is unchanged apart from one corrected figure in section 5 (the fit coupon size).
 
-## Compact version: 70 × 100 × 12 mm (`powerbank70.scad`)
+## Design v3 (current): FPC antenna on the +Y wall, camera and button on the short end face, sealed
+
+**Bottom line.** Body **95.73 × 73.00 × 11.78 mm** (worst case printed 95.93 × 73.20 × 11.98; your limits are 100 × 73.2 × 12). The 50 × 14 × 0.3 mm FPC antenna goes on the inner surface of the +Y wall and bends once onto the front wall. The camera and one tact button are on the +X short end face. No slide switch, no vents, no slots. Everything below was collision-checked (98 pairs, 39 asserts); the one thing that does **not** pass is a continuous charge-plus-camera load in a warm room (thermal section).
+
+| Item | Result | Numbers |
+|---|---|---|
+| **FPC 50 × 14 × 0.3 on the +Y wall, bent onto the front wall** | **PASS** | strip x 41.5–91.5; 6.5 mm on the wall, one R3 bend (printed fillet under it), 2.79 mm flat on the front wall; reaches y 66.21–72.00 |
+| **Clearances** | **PASS** | cell foil **30.6 mm** (rule 10); every other metal part, board and wire lane ≥ 5 mm (antenna keep-out pairs 48–57 empty; the strip is 5.5 mm in plan, and 5.7 mm in 3D, from the XIAO board edge) |
+| **Camera out of the short end face** (lens axis horizontal when the box lies flat) | **PASS with a 7 mm window disc and a lens of 73° or less. FAIL with your original 12 mm disc or a 120° lens** | see "Camera on the end face" |
+| **One tact button on the same face** | **PASS** | 6 × 6 mm, body 4.3 mm, total height 5.5 mm (assumed 1.2 mm plunger; rule ≤ 6.0) |
+| Slide switch and second button | removed | the switch code stays behind `has_switch` |
+| No vents or slots | done | `vents=false`, `cell_vents=false`, switch slot gone |
+| Limits | **PASS** | L 95.73 ≤ 100; W 73.00 nominal = 73.20 worst case ≤ 73.2; T 11.78 nominal = 11.98 worst case ≤ 12 |
+| **Thermal margin, sealed** | **MARGINAL / FAIL in some cases** | see "Heat in the sealed shell" |
+
+### What I changed from the numbers you gave
+- **Width 73.0 nominal, not 73.2.** Limits are checked at the worst-case printed size (+0.2 mm), so 73.0 nominal is your 73.2.
+- **Strip starts at x 41.5, not 41.** A wire lane ends at x = 36.02 and needs 5 mm. It ends at x 91.5.
+- **Length 95.73, not 98.6.** The camera and button left the band above the cell, so the cell block sets the length. Version 1 (sharp): 94.85.
+- **Window disc 7 mm and lens 69° instead of 12 mm and 120°.** Those do not fit the end face (below).
+- **Cell width ≤ 34.5 mm.** A wider cell pushes the XIAO up and the strip no longer clears it. The 503450 at its listing max (34.8) needs a 73.27 mm body, which is over your limit. The 603450 at 6.0 × 34.5 × 52 passes (97.73 × 73.00).
+
+### Camera on the end face: PASS or FAIL
+The camera sits at y 55.0 on the +X end wall, window at mid-height; the head is in the cradle, the ribbon runs on the lid to the XIAO (reserved lane, 3.2 mm jog). The cavity is only **9.78 mm** tall and the flat part of the end face **10.28 mm**, so the window disc and its ring decide.
+
+| Window disc | Ring OD | Fits the 9.78 mm cavity? | Largest lens FOV that still fits the opening |
+|---|---|---|---|
+| **12 mm (yours)** | 14.0 mm | **no (FAIL)** | n/a |
+| 7.7 mm (largest that fits) | 9.7 mm | yes | 88° |
+| **7.0 mm (used)** | 9.0 mm | yes | **73.6°** |
+| 6.0 mm | 8.0 mm | yes | 47° |
+
+A **120° wide-angle lens cannot work on the end face**: it needs a 12 mm disc. The Seeed standard lens is 69°; if your lens is wider than about 74° use the 7.7 mm disc (up to 88°), and above that the camera has to go back on the front face. **Not modelled:** the ribbon fold where it leaves the head sideways towards the lid and turns back to the XIAO (bend radius not checked; the head has only 0.44 mm below it).
+
+### Button wake-up wiring
+Use **D1 = GPIO2** (any of D0–D5 = GPIO1–6 works). One button leg to GND, the other to GPIO2; enable the internal pull-up with `rtc_gpio_pullup_en()` before `esp_deep_sleep_start()` and wake on LOW (`esp_sleep_enable_ext0_wakeup(GPIO_NUM_2, 0)`, or ext1 any-low). Sources: the [XIAO ESP32S3 pin map](https://wiki.seeedstudio.com/xiao_esp32s3_pin_multiplexing/) (D0–D5 = GPIO1–6; D6/D7 = GPIO43/44; D8–D10 = GPIO7–9, which the Sense board's microSD uses), [Espressif sleep modes](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/system/sleep_modes.html) (ext0/ext1 wake from RTC GPIOs; set the internal pulls before sleeping), and a [tutorial](https://randomnerdtutorials.com/esp32-external-wake-up-deep-sleep/) that lists the ESP32-S3 RTC GPIOs as 0–21 (I did not find that range on an Espressif page; check the datasheet). **Avoid** D2 = GPIO3 (a strapping pin), D6/D7 (GPIO43/44, outside 0–21) and D8–D10 (SD card). The wires use the existing thermal lane to the XIAO's edge pads; the route is not simulated. The Sense camera can keep drawing power in deep sleep (users report 2.8–91 mA, [Seeed forum](https://forum.seeedstudio.com/t/esp32s3-sense-camera-very-high-deep-sleep-current-any-solution/274705)), so check the sleep current before counting on a long standby.
+
+### FPC antenna: how it is built
+- The strip is 50 mm long along the +Y wall: **6.5 mm on the wall, a quarter-circle bend of R3 mm, 2.79 mm flat on the front wall** (6.5 + 4.71 + 2.79 = 14.0). A printed fillet of R3 under the bend gives the strip a gentle radius to stick to. The two top ledges on the +Y wall are gone.
+- The plan reach is 5.79 mm from the wall (y 66.21–72.00). The strip must stay 5 mm from the XIAO board edge, so **the body width follows the XIAO**: `fpc_W` = 73.0 or the XIAO-driven value if larger.
+- **Cable (IPEX gen-1, 5 cm):** the route from the XIAO's U.FL socket to the strip's feed end is about 32 mm (Manhattan, an assert), leaving about 18 mm of slack to coil. There is a free pocket for it (about 15 × 12 mm) between the XIAO and the end-face camera, away from the keep-out; the model does not reserve it.
+- **Largest FPC that still fits:** about **52.2 mm long and 14.5 mm wide** (each on its own, other parts at default), thickness 0.3 mm (thicker is not checked). That is your pass/fail size for the seller's listing.
+
+### Heat in the sealed shell (no vents, no slots)
+Estimate with `python3 enclosure/tools/thermal_estimate.py` (a lumped model, **not a measurement**; output in `check_results/c70_thermal_estimate.txt`). Assumptions: outside film coefficient 10 W/m²K (convection 2–10 plus radiation of about 5; [SolidWorks table](https://help.solidworks.com/2012/english/solidworks/cworks/convection_heat_coefficient.htm) gives 5–25 for air), the face on the desk counted as insulated, the linear charger losing (5.0 − 3.7 V) × I, the XIAO + camera drawing 0.6 W (assumed), the cell 3 K above the wall mean. Limits: the resin's 60 °C HDT ([JLC](https://jlc3dp.com/help/article/9000he-resin)), a 45 °C cell charging limit (typical [LiPo datasheets](https://www.farnell.com/datasheets/2581150.pdf) quote 0–45 °C), and Seeed's 63.6 °C XIAO back temperature in open air with the camera running ([wiki](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started)).
+
+```
+box 95.73 x 73.00 x 11.78 mm, outside area 0.0180 m2, 0.0110 m2 without the face on the desk
+linear charger loss = (5.0 V - 3.7 V) x I (3.0 V cell: up to (5.0-3.0) x I)
+case                                                  P [W] | shell rise, h=pessimistic 7 | shell rise, h=typical 10 | shell rise, h=optimistic 16
+A  XIAO + camera running, not charging                 0.60 |   7.8 K           |   5.5 K           |   3.4 K          
+B  charging 0.5 A (IS jumper cut), XIAO asleep/idle    0.75 |   9.8 K           |   6.8 K           |   4.3 K          
+C  charging 1 A (default), XIAO asleep/idle            1.40 |  18.2 K           |  12.8 K           |   8.0 K          
+D  charging 1 A + XIAO + camera running (worst)        1.90 |  24.8 K           |  17.3 K           |  10.8 K          
+E  charging 0.5 A + XIAO + camera running              1.25 |  16.3 K           |  11.4 K           |   7.1 K          
+
+Margins at 25 C room (typical h = 10). Verdict: PASS >= 5 K, MARGINAL 0-5 K, FAIL < 0
+  A  XIAO + camera running, not charging             wall mean 30.5 C: PASS     | cell 33.5 C: PASS     | XIAO back ~67.1 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  B  charging 0.5 A (IS jumper cut), XIAO asleep/idle wall mean 31.8 C: PASS     | cell 34.8 C: PASS     | XIAO back not hot (camera off)
+  C  charging 1 A (default), XIAO asleep/idle        wall mean 37.8 C: PASS     | cell 40.8 C: MARGINAL | XIAO back not hot (camera off)
+  D  charging 1 A + XIAO + camera running (worst)    wall mean 42.3 C: PASS     | cell 45.3 C: FAIL     | XIAO back ~78.9 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  E  charging 0.5 A + XIAO + camera running          wall mean 36.4 C: PASS     | cell 39.4 C: PASS     | XIAO back ~73.0 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+
+Margins at 35 C room (typical h = 10). Verdict: PASS >= 5 K, MARGINAL 0-5 K, FAIL < 0
+  A  XIAO + camera running, not charging             wall mean 40.5 C: PASS     | cell 43.5 C: MARGINAL | XIAO back ~77.1 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  B  charging 0.5 A (IS jumper cut), XIAO asleep/idle wall mean 41.8 C: PASS     | cell 44.8 C: MARGINAL | XIAO back not hot (camera off)
+  C  charging 1 A (default), XIAO asleep/idle        wall mean 47.8 C: PASS     | cell 50.8 C: FAIL     | XIAO back not hot (camera off)
+  D  charging 1 A + XIAO + camera running (worst)    wall mean 52.3 C: PASS     | cell 55.3 C: FAIL     | XIAO back ~88.9 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  E  charging 0.5 A + XIAO + camera running          wall mean 46.4 C: PASS     | cell 49.4 C: FAIL     | XIAO back ~83.0 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+
+```
+
+**Verdict (sealed shell):**
+- **The wall mean is fine everywhere** (PASS): the box has about 0.011 m² of usable surface and its mean rise is 3–17 K.
+- **Charging at 1 A (the board default) FAILS the cell limit** in a 35 °C room and is MARGINAL at 25 °C. **Cut the bq25185's IS jumper for 0.5 A** ([Adafruit](https://www.adafruit.com/product/6091): 500 or 250 mA): then 25 °C is PASS and 35 °C is MARGINAL. At 35 °C with the camera running as well, even 0.5 A fails the cell limit.
+- **The XIAO back with the camera running is above 60 °C** (about 67–89 °C in this model, from Seeed's own 63.6 °C bench figure). The front wall over it is 1.4 mm away, so it will be cooler than the board by an unknown amount: **measure it**. For short wake-on-button bursts this is fine; for continuous video it is not proven.
+- The sealed shell removes vents that were small to begin with, so the change from the earlier design is minor. The levers that matter are charge current and camera duty cycle.
+
+### Fallback: ceramic 13 × 5 inside the body
+`-D ant_place="inside" -D ant_type="ceramic" -D ant_l=13 -D ant_w=5 -D ant_t=1.0 -D ant_cable_len=100` with the camera and button still on the end face: **95.73 × 72.15 × 11.78 mm** (worst case 95.93 × 72.35), all 98 pairs pass. The ceramic sits in the board layer above the ribbon lane (5 mm clear of it).
+
+**Checks run by me here (OpenSCAD 2021.01), on the final `powerbank70.scad`**
+
+| Configuration | Asserts | Collision pairs | Printable parts (9) |
+|---|---|---|---|
+| **v3 default:** 603450, FPC 50×14×0.3 on the +Y wall, camera + button on the end face, v2 rounded, removable plug | PASS | **98 / 98** | one simple solid each |
+| v3, v1 sharp, removable plug | PASS | **98 / 98** | one simple solid each |
+| v3, v2 rounded, permanent plug | PASS | **98 / 98** | one simple solid each |
+| **Fallback:** ceramic 13×5 inside the body (`ant_place="inside"`), camera + button still on the end face | PASS | **98 / 98** | one simple solid each |
+| v3 with the 603450 at its listing max 6.0×34.5×52.0 | PASS | **98 / 98** | one simple solid each |
+| Unused tab code (regression only): +Y tab, 45×7 | PASS | **98 / 98** | one simple solid each |
+
+The 98 pairs are the same as in v2 plus the Wi-Fi test piece; the switch pairs are empty because the switch is removed. Logs: `enclosure/check_results/c70_v3_*.log` and `c70_fallback_*.log`.
+
+**Not verified in v3.** The ribbon fold and the coax coil (reserved or not modelled); the FPC's bend, adhesion and the fillet under it (the strip is a clearance model); the 1.2 mm plunger height (your 6 × 6 × 4.3 tact: tell me the real total height); the lens FOV and window disc (assumed 69° and 7 mm); RF performance of a strip lying on the wall 5.5 mm from the XIAO (the 5 mm rule is geometry, not measured); the heat figures (an estimate); nothing is printed. The removable plug keeps a 6 × 0.6 mm pry notch on its edge (a recess, not a slot through the shell); the permanent plug has none.
+
+STLs: `enclosure/stl/c70_v3_*.stl` (body v2 rounded, plugs, covers, button cap, coupon, Wi-Fi test piece, and `c70_v3_fallback_body_ceramic13x5.stl`). The v2 STLs moved to `enclosure/stl/v2/`. Images: `img/c70_v3_*.png`.
+
+![v3 layout](img/c70_v3_layout.png)
+
+| End face (camera right, button left of it) | Exploded |
+|---|---|
+| ![v3 end](img/c70_v3_end.png) | ![v3 exploded](img/c70_v3_exploded.png) |
+
+---
+
+## Compact version v2 (SUPERSEDED by v3 above): 70 × 100 × 12 mm, front-face camera, slide switch
+
+*v2 files: STLs in `enclosure/stl/v2/`, logs and study outputs in `enclosure/check_results/v2/`. The paths in this section that say `stl/c70_*` or `check_results/c70_*` mean those folders.*
 
 **Bottom line: the default build is a 603450-class LiPo (1000–1500 mAh) with a 13 × 5 mm ceramic U.FL antenna inside: 98.60 × 68.96 × 11.78 mm (98.6 × 69.0 × 11.8), a clean rectangle; 98.80 × 69.16 × 11.98 mm worst-case printed.** A stick-on antenna does not fit in 70 × 100 × 12. **Plan B** grows the whole body as a clean rectangle: Molex-206994-class 15.4 × 6.4 mm needs **100.20 × 70.36 × 11.78 mm**, a 25 × 6 mm needs **108.53 × 69.96 × 11.78 mm**; the Molex-class is smaller (see "Plan B"). There is **no tab or bump** in the recommended path. A **Wi-Fi test piece** lets you compare the ceramic and a stick-on antenna in the same bay before you commit.
 
@@ -204,7 +312,7 @@ Colours: silver = cell, royal blue = bq25185 (USB-C on the bottom edge), purple 
 
 | File | What |
 |---|---|
-| `enclosure/powerbank70.scad` | The compact model, one standalone file (no includes). Swap-in parameters at the top. Built from the full model's modules |
+| `enclosure/powerbank70.scad` | The compact model (v3 default; v2 options kept: `cam_face`, `has_switch`, `vents`), one standalone file (no includes). Swap-in parameters at the top. Built from the full model's modules |
 | `enclosure/tools/run_combos.sh` | Cell × antenna table (`full` adds the collision pairs) |
 | `enclosure/tools/run_checks.sh` | Asserts + pairs + part renders. `SCAD=powerbank70.scad enclosure/tools/run_checks.sh` for the compact model |
 | `enclosure/stl/c70_*.stl` | STLs for the default build (ceramic 13 × 5): body v2 / v1, plug (removable and permanent), covers A / B / C, button cap, fit coupon |

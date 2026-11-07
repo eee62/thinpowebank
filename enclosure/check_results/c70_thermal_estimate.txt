@@ -1,0 +1,23 @@
+box 95.73 x 73.00 x 11.78 mm, outside area 0.0180 m2, 0.0110 m2 without the face on the desk
+linear charger loss = (5.0 V - 3.7 V) x I (3.0 V cell: up to (5.0-3.0) x I)
+case                                                  P [W] | shell rise, h=pessimistic 7 | shell rise, h=typical 10 | shell rise, h=optimistic 16
+A  XIAO + camera running, not charging                 0.60 |   7.8 K           |   5.5 K           |   3.4 K          
+B  charging 0.5 A (IS jumper cut), XIAO asleep/idle    0.75 |   9.8 K           |   6.8 K           |   4.3 K          
+C  charging 1 A (default), XIAO asleep/idle            1.40 |  18.2 K           |  12.8 K           |   8.0 K          
+D  charging 1 A + XIAO + camera running (worst)        1.90 |  24.8 K           |  17.3 K           |  10.8 K          
+E  charging 0.5 A + XIAO + camera running              1.25 |  16.3 K           |  11.4 K           |   7.1 K          
+
+Margins at 25 C room (typical h = 10). Verdict: PASS >= 5 K, MARGINAL 0-5 K, FAIL < 0
+  A  XIAO + camera running, not charging             wall mean 30.5 C: PASS     | cell 33.5 C: PASS     | XIAO back ~67.1 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  B  charging 0.5 A (IS jumper cut), XIAO asleep/idle wall mean 31.8 C: PASS     | cell 34.8 C: PASS     | XIAO back not hot (camera off)
+  C  charging 1 A (default), XIAO asleep/idle        wall mean 37.8 C: PASS     | cell 40.8 C: MARGINAL | XIAO back not hot (camera off)
+  D  charging 1 A + XIAO + camera running (worst)    wall mean 42.3 C: PASS     | cell 45.3 C: FAIL     | XIAO back ~78.9 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  E  charging 0.5 A + XIAO + camera running          wall mean 36.4 C: PASS     | cell 39.4 C: PASS     | XIAO back ~73.0 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+
+Margins at 35 C room (typical h = 10). Verdict: PASS >= 5 K, MARGINAL 0-5 K, FAIL < 0
+  A  XIAO + camera running, not charging             wall mean 40.5 C: PASS     | cell 43.5 C: MARGINAL | XIAO back ~77.1 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  B  charging 0.5 A (IS jumper cut), XIAO asleep/idle wall mean 41.8 C: PASS     | cell 44.8 C: MARGINAL | XIAO back not hot (camera off)
+  C  charging 1 A (default), XIAO asleep/idle        wall mean 47.8 C: PASS     | cell 50.8 C: FAIL     | XIAO back not hot (camera off)
+  D  charging 1 A + XIAO + camera running (worst)    wall mean 52.3 C: PASS     | cell 55.3 C: FAIL     | XIAO back ~88.9 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+  E  charging 0.5 A + XIAO + camera running          wall mean 46.4 C: PASS     | cell 49.4 C: FAIL     | XIAO back ~83.0 C (above 60 C; the front wall over it is cooler by the 1.4 mm air gap, by an unknown amount: MEASURE)
+
